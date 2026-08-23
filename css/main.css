@@ -1394,16 +1394,35 @@ body {
   pointer-events: none;
 }
 
+.clone-swarm {
+  position: absolute;
+  inset: -55% -70%;
+  pointer-events: none;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 20% 25%, rgba(255, 255, 255, 0.85) 0 3%, transparent 4%),
+    radial-gradient(circle at 70% 20%, rgba(255, 255, 255, 0.8) 0 2.5%, transparent 3.5%),
+    radial-gradient(circle at 40% 70%, rgba(255, 255, 255, 0.75) 0 2.8%, transparent 3.6%),
+    radial-gradient(circle at 80% 65%, rgba(255, 255, 255, 0.8) 0 2.4%, transparent 3.2%),
+    radial-gradient(circle at 55% 40%, rgba(255, 255, 255, 0.7) 0 2.2%, transparent 3%);
+  opacity: 0.85;
+  animation: swarm-spin 4.8s linear infinite;
+}
+
+@keyframes swarm-spin {
+  to { transform: rotate(360deg); }
+}
+
 .mini-clone {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 18%;
-  height: 18%;
-  margin: -9% 0 0 -9%;
+  width: 16%;
+  height: 16%;
+  margin: -8% 0 0 -8%;
   border-radius: 50%;
   border: 0.12vmin solid rgba(255, 255, 255, 0.7);
-  transform: rotate(calc(var(--i) * 36deg)) translateY(-165%);
+  transform: rotate(calc(var(--i) * 22.5deg)) translateY(-175%);
   box-shadow: 0 0 0.25vmin rgba(0, 0, 0, 0.2);
 }
 
@@ -2047,9 +2066,111 @@ body {
 }
 
 .foe.boss {
-  width: 8%;
-  height: 16%;
+  width: 9%;
+  height: 18%;
   z-index: 7;
+}
+
+.cup-boss {
+  position: absolute;
+  inset: 6% 16% 10%;
+}
+
+.cup-body {
+  position: absolute;
+  left: 12%;
+  top: 22%;
+  width: 76%;
+  height: 68%;
+  background: linear-gradient(180deg, #e24a18, #8a1408);
+  border-radius: 0 0 18% 18%;
+  box-shadow: inset 0 0.4vmin 0 #ffb34a;
+}
+
+.cup-rim {
+  position: absolute;
+  left: 6%;
+  top: 14%;
+  width: 88%;
+  height: 16%;
+  background: #f0c020;
+  border-radius: 50%;
+  border: 0.2vmin solid #7a4a08;
+  z-index: 2;
+}
+
+.cup-straw {
+  position: absolute;
+  left: 58%;
+  top: -8%;
+  width: 10%;
+  height: 28%;
+  background: #3cb46a;
+  border-radius: 0.4vmin;
+  transform: rotate(12deg);
+  z-index: 3;
+}
+
+.cup-eyes {
+  position: absolute;
+  left: 28%;
+  top: 42%;
+  width: 44%;
+  height: 12%;
+  z-index: 3;
+}
+
+.cup-eyes::before,
+.cup-eyes::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 28%;
+  height: 100%;
+  background: #fff36a;
+  border-radius: 50%;
+  box-shadow: inset 0.2vmin 0.15vmin 0 #1c140e;
+}
+
+.cup-eyes::before { left: 0; }
+.cup-eyes::after { right: 0; }
+
+.cup-spikes {
+  position: absolute;
+  left: 8%;
+  top: 18%;
+  width: 84%;
+  height: 14%;
+  background:
+    linear-gradient(135deg, transparent 40%, #f0c020 41% 59%, transparent 60%) 0 0 / 20% 100% repeat-x;
+  z-index: 2;
+}
+
+.cup-lava-glow {
+  position: absolute;
+  left: 22%;
+  top: 6%;
+  width: 56%;
+  height: 18%;
+  background: radial-gradient(circle, #fff2a0, #ff6a12 55%, transparent 70%);
+  border-radius: 50%;
+  animation: lava-pulse 0.45s ease-in-out infinite alternate;
+}
+
+@keyframes lava-pulse {
+  from { transform: scale(0.85); opacity: 0.7; }
+  to { transform: scale(1.15); opacity: 1; }
+}
+
+.lava-drop {
+  position: absolute;
+  z-index: 8;
+  width: 1.1%;
+  height: 1.6%;
+  margin-left: -0.55%;
+  border-radius: 50% 50% 40% 40%;
+  pointer-events: none;
+  box-shadow: 0 0 0.5vmin currentColor;
 }
 
 .foe.boss .body {

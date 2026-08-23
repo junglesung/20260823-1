@@ -32,6 +32,12 @@
   const BOSS_GOAL = 3;
   const BOSS_FIELD = { minX: 4, maxX: 90, minY: 14, maxY: 80 };
   const MAX_AMMO = 8;
+  const FOOD_X = 100;
+  const TOFU_X = 200;
+  const ALL_X = 100;
+  const GAME_X = 200;
+  const CLONE_COUNT = 100;
+  const MEGA_CLONES = 10000;
   const LIMBS = ["hand-left", "hand-right", "foot-left", "foot-right"];
   const LIMB_WORDS = {
     "hand-left": "一手",
@@ -115,7 +121,7 @@
   const game = {
     playing: false,
     paused: false,
-    money: 10,
+    money: 10 * GAME_X,
     animals: [],
     foes: [],
     foods: [],
@@ -163,8 +169,17 @@
     bullets: [],
     stageBosses: false,
     converting: false,
+    lavas: [],
     link: { active: false, animals: [], foe: null, pointer: null }
   };
+
+  function buildCloneDots(shown) {
+    let html = "";
+    for (let i = 0; i < shown; i += 1) {
+      html += '<div class="mini-clone" style="--i:' + i + '"></div>';
+    }
+    return html;
+  }
 
   function rand(min, max) {
     return min + Math.random() * (max - min);
@@ -292,18 +307,8 @@
         '<div class="herd-body"></div>' +
         '<div class="animal-gun"></div>' +
       "</div>" +
-      '<div class="clones">' +
-        '<div class="mini-clone" style="--i:0"></div>' +
-        '<div class="mini-clone" style="--i:1"></div>' +
-        '<div class="mini-clone" style="--i:2"></div>' +
-        '<div class="mini-clone" style="--i:3"></div>' +
-        '<div class="mini-clone" style="--i:4"></div>' +
-        '<div class="mini-clone" style="--i:5"></div>' +
-        '<div class="mini-clone" style="--i:6"></div>' +
-        '<div class="mini-clone" style="--i:7"></div>' +
-        '<div class="mini-clone" style="--i:8"></div>' +
-        '<div class="mini-clone" style="--i:9"></div>' +
-      "</div>";
+      '<div class="clone-swarm" aria-hidden="true"></div>' +
+      '<div class="clones">' + buildCloneDots(16) + "</div>";
 
     herdEl.appendChild(el);
 
@@ -356,6 +361,17 @@
     const tag = options.tag || (typhoon ? "颱風小偷" : role === "thief" ? "小偷" : role === "hunter" ? "獵人" : role === "boss" ? "魔王" : role === "rascal" ? "搗蛋" : "壞人");
     if (role === "rascal") {
       el.innerHTML = '<div class="rascal-body"></div><span class="tag">搗蛋</span>';
+    } else if (role === "boss") {
+      el.innerHTML =
+        '<div class="cup-boss">' +
+          '<div class="cup-lava-glow"></div>' +
+          '<div class="cup-rim"></div>' +
+          '<div class="cup-straw"></div>' +
+          '<div class="cup-eyes"></div>' +
+          '<div class="cup-body"></div>' +
+          '<div class="cup-spikes"></div>' +
+        "</div>" +
+        '<span class="tag">' + (tag === "大魔王" || tag === "魔王" ? "瑪利歐大魔王杯" : tag) + "</span>";
     } else {
       el.innerHTML =
         '<div class="foe-sprite">' +
@@ -397,6 +413,7 @@
       needsNuke: !!options.needsNuke,
       hitByClone: false,
       cloneCoinCd: 0,
+      eruptAcc: 0,
       limbs: LIMBS.slice(),
       limbTimer: 0,
       nextTurn: Math.random(),
@@ -412,7 +429,7 @@
 
   function spawnVillains(count) {
     for (let i = 0; i < count; i += 1) {
-      createFoe({ role: "villain", need: 1, money: 6 });
+      createFoe({ role: "villain", need: 1, money: 6 * ALL_X });
     }
   }
 
@@ -421,7 +438,7 @@
       createFoe({
         role: "hunter",
         need: 1,
-        money: 4,
+        money: 4 * ALL_X,
         speed: 6.2 + Math.random() * 1.6,
         tag: "獵人"
       });
@@ -433,12 +450,12 @@
     const roll = Math.random();
     let options;
     if (roll < 0.35) {
-      options = { tag: "爛魔王", bossClass: "weak", need: 2, money: 12, needsNuke: false };
+      options = { tag: "瑪利歐大魔王杯", bossClass: "weak", need: 2, money: 12 * ALL_X, needsNuke: false };
     } else if (roll < 0.65) {
-      options = { tag: "魔王", bossClass: "", need: 6, money: 20, needsNuke: false };
+      options = { tag: "瑪利歐大魔王杯", bossClass: "", need: 6, money: 20 * ALL_X, needsNuke: false };
     } else {
       const need = 10 + Math.floor(Math.random() * 6);
-      options = { tag: "超強魔王", bossClass: "strong", need: need, money: 36, needsNuke: true };
+      options = { tag: "瑪利歐大魔王杯", bossClass: "strong", need: need, money: 36 * ALL_X, needsNuke: true };
     }
     createFoe({
       role: "boss",
@@ -471,11 +488,11 @@
     bosses.forEach(function (item) {
       createFoe({
         role: "boss",
-        tag: item.tag,
+        tag: "瑪利歐大魔王杯",
         bossClass: item.bossClass,
         need: item.need,
         hp: item.hp,
-        money: 20,
+        money: 20 * ALL_X,
         needsNuke: item.needsNuke,
         speed: 2.4,
         x: item.x,
@@ -483,7 +500,7 @@
       });
     });
     spawnRascals(100);
-    showToast("這一關只打三隻魔王。姐姐那次有 100 個搗蛋，牠們也來了！");
+    showToast("三隻瑪利歐大魔王都變成飲料杯，會噴液體和火山岩漿！每隻動物有一百個分身。");
     updateHud();
   }
 
@@ -494,7 +511,7 @@
         tag: "搗蛋",
         need: 1,
         hp: 1,
-        money: 3,
+        money: 3 * ALL_X,
         speed: 5.2 + Math.random() * 2.4,
         x: rand(4, 90),
         y: rand(16, 78)
@@ -514,7 +531,7 @@
     });
     game.ammo = MAX_AMMO;
     spawnBigBossStage();
-    showToast("二十隻都有十個小分身。分身打中大魔王和小士兵，壞人會掉更多錢。");
+    showToast("每隻動物有 " + CLONE_COUNT + " 個分身，開火時像 " + MEGA_CLONES + " 次分身一起打。");
     updateHud();
   }
 
@@ -540,8 +557,9 @@
     }).forEach(function (animal) {
       const from = unitCenter(animal, false);
       spawnBullet(from.x, from.y, point, false);
-      for (let i = 0; i < 10; i += 1) {
-        const rad = (i / 10) * Math.PI * 2;
+      const shown = 8;
+      for (let i = 0; i < shown; i += 1) {
+        const rad = (i / shown) * Math.PI * 2;
         spawnBullet(from.x + Math.cos(rad) * 3.2, from.y + Math.sin(rad) * 3.6, point, true);
       }
     });
@@ -585,7 +603,7 @@
       return;
     }
     foe.cloneCoinCd = 0.35;
-    dropCoins(foe.x + 1.2, foe.y + 1, foe.role === "boss" ? 4 : 2);
+    dropCoins(foe.x + 1.2, foe.y + 1, (foe.role === "boss" ? 4 : 2) * ALL_X);
   }
 
   function startReloadCountdown() {
@@ -840,12 +858,12 @@
 
     if (typhoon) {
       const need = 4 + Math.floor(Math.random() * 5);
-      createFoe({ role: "thief", typhoon: true, need: need, money: 28 });
+      createFoe({ role: "thief", typhoon: true, need: need, money: 28 * ALL_X });
       spawnVillains(1);
       game.eliteSpawned = true;
       showToast("颱風雨來了！小偷裝備更強，要連 " + need + " 隻紅色動物再拉到藍色壞人。");
     } else {
-      createFoe({ role: "thief", need: 3, money: 14 });
+      createFoe({ role: "thief", need: 3, money: 14 * ALL_X });
       spawnVillains(2);
       showToast("下雨了！出現小偷。黑色的是壞人，快按，或用紅色動物連線去打。");
     }
@@ -869,22 +887,23 @@
 
   function dropFood(kind) {
     const isTofu = kind === "tofu";
-    const count = (isTofu ? 1 : 1) + game.extraFood;
-    for (let i = 0; i < count; i += 1) {
+    const burst = isTofu ? Math.min(18, 2 + game.extraFood * 2) : Math.min(12, 1 + game.extraFood * 2);
+    for (let i = 0; i < burst; i += 1) {
       const el = document.createElement("div");
       el.className = "food-drop" + (isTofu ? " tofu" : "");
-      const x = rand(8, 90);
+      const x = rand(6, 92);
       el.style.left = x + "%";
-      el.style.top = "6%";
+      el.style.top = 4 + (i % 5) + "%";
       foodsEl.appendChild(el);
       game.foods.push({
         el: el,
         x: x,
         y: 6,
         eaten: false,
-        fill: isTofu ? 92 : 58
+        fill: isTofu ? Math.min(100, 92 * TOFU_X) : Math.min(100, 58 * FOOD_X)
       });
     }
+    showToast(isTofu ? "豆腐包我家 200 倍！滿天豆腐落下來了。" : "食物加了百倍！整場都是糧食。");
   }
 
   function dropCoins(x, y, amount) {
@@ -901,7 +920,29 @@
         life: 0.9 + Math.random() * 0.4
       });
     }
-    game.money += amount;
+    game.money += amount * GAME_X;
+  }
+
+  function eruptBoss(foe) {
+    const colors = ["#ff4a12", "#ff8a00", "#ffd24a", "#6ad4ff", "#b44aff", "#3cff7a", "#8b2a10"];
+    for (let i = 0; i < 5; i += 1) {
+      const el = document.createElement("div");
+      el.className = "lava-drop";
+      el.style.background = colors[Math.floor(Math.random() * colors.length)];
+      const x = foe.x + 3 + rand(-3, 3);
+      const y = foe.y + 1;
+      el.style.left = x + "%";
+      el.style.top = y + "%";
+      stage.appendChild(el);
+      game.lavas.push({
+        el: el,
+        x: x,
+        y: y,
+        vx: rand(-14, 14),
+        vy: rand(-22, -6),
+        life: 1.15
+      });
+    }
   }
 
   function removeAnimal(animal, silent) {
@@ -1534,7 +1575,7 @@
         }
         animal.hunger = Math.min(100, animal.hunger + nearbyFood.fill + game.animalLevel * 8);
         animal.el.classList.remove("hungry");
-        game.money += 1;
+        game.money += 1 * ALL_X;
       } else if (hungry) {
         const falling = game.foods.find(function (food) {
           return !food.eaten && Math.abs(food.x - animal.x) < 18;
@@ -1554,6 +1595,13 @@
     game.foes.forEach(function (foe) {
       if (foe.cloneCoinCd > 0) {
         foe.cloneCoinCd -= dt;
+      }
+      if (foe.role === "boss" && !foe.attacking) {
+        foe.eruptAcc += dt;
+        if (foe.eruptAcc >= 0.28) {
+          foe.eruptAcc = 0;
+          eruptBoss(foe);
+        }
       }
       game.animals.forEach(function (animal) {
         const dx = animal.x + 2.3 - (foe.x + 2.6);
@@ -1593,6 +1641,28 @@
       return coin.life > 0;
     });
 
+    game.lavas.forEach(function (drop) {
+      drop.vy += 38 * dt;
+      drop.x += drop.vx * dt;
+      drop.y += drop.vy * dt;
+      drop.life -= dt;
+      drop.el.style.left = drop.x + "%";
+      drop.el.style.top = drop.y + "%";
+      game.animals.forEach(function (animal) {
+        const dx = animal.x + 2 - drop.x;
+        const dy = animal.y + 3 - drop.y;
+        if (dx * dx + dy * dy < 8) {
+          animal.hp -= 8 * dt;
+        }
+      });
+      if (drop.life <= 0 && drop.el.parentNode) {
+        drop.el.parentNode.removeChild(drop.el);
+      }
+    });
+    game.lavas = game.lavas.filter(function (drop) {
+      return drop.life > 0;
+    });
+
     if (!game.doorLocked && game.neighborStep < 0) {
       game.animals.filter(function (animal) {
         return animal.hunger <= 0;
@@ -1620,9 +1690,9 @@
       const fed = game.animals.filter(function (animal) {
         return animal.hunger >= 50;
       }).length;
-      game.money += Math.floor(fed / 20);
+      game.money += Math.floor(fed / 20) * ALL_X;
       if (game.working) {
-        game.money += 2;
+        game.money += 2 * ALL_X;
       }
     }
 
@@ -1637,7 +1707,7 @@
       }
     }
 
-    if (game.money >= 100) {
+    if (game.money >= 100 * GAME_X) {
       unlockShop();
     }
 
