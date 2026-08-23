@@ -504,6 +504,7 @@
   }
 
   function spawnRascals(count) {
+    return;
     for (let i = 0; i < count; i += 1) {
       createFoe({
         role: "rascal",
