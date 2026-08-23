@@ -1574,7 +1574,7 @@
         }
         return;
       }
-      moveMover(foe, foe.role === "boss" ? BOSS_FIELD : FIELD, dt, 0.2);
+      moveMover(foe, foe.role === "boss" || foe.role === "rascal" ? BOSS_FIELD : FIELD, dt, 0.2);
     });
 
     if (game.link.active) {
