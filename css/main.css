@@ -1439,6 +1439,11 @@ body {
   transform: translateY(-50%);
 }
 
+.aim-mark[hidden],
+.world-boom[hidden] {
+  display: none !important;
+}
+
 .world-boom {
   position: absolute;
   inset: 0;
