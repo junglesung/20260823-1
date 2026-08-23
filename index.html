@@ -205,6 +205,14 @@
           <span>壞人</span>
           <strong id="foe-count">0</strong>
         </div>
+        <div class="hud-card">
+          <span>農夫血量</span>
+          <strong id="farmer-hp">100</strong>
+        </div>
+        <div class="hud-card">
+          <span>魔王</span>
+          <strong id="boss-progress">0/4</strong>
+        </div>
         <div class="hud-card goal">
           <span>目標</span>
           <strong id="goal-value">餵飽全場就贏</strong>
@@ -215,16 +223,20 @@
         <button type="button" class="start-btn" id="start-btn">
           開始遊戲
         </button>
-        <p class="start-hint">餵飽全場就贏。黑色的是壞人，紅色動物連線去打藍色壞人</p>
+        <p class="start-hint">點草地讓農夫跑。加號補血，動物相撞會生小動物</p>
       </div>
 
       <div class="game-actions" id="game-actions" hidden>
         <button type="button" class="game-btn food-btn" id="food-btn">食物</button>
         <button type="button" class="game-btn tofu-btn" id="tofu-btn">豆腐</button>
+        <button type="button" class="game-btn plus-btn" id="plus-btn">＋</button>
+        <button type="button" class="game-btn add-btn" id="add-btn">加20隻</button>
         <button type="button" class="game-btn umbrella-btn" id="umbrella-btn" hidden>雨傘</button>
+        <button type="button" class="game-btn nuke-btn" id="nuke-btn" hidden>核彈</button>
         <button type="button" class="game-btn shop-btn" id="shop-btn" hidden>升級牧場</button>
       </div>
 
+      <div class="nuke-flash" id="nuke-flash" hidden></div>
       <p class="toast" id="toast" hidden></p>
 
       <div class="overlay" id="neighbor-overlay" hidden>
@@ -252,6 +264,14 @@
         </div>
       </div>
 
+      <div class="overlay" id="dead-overlay" hidden>
+        <div class="panel">
+          <h2>農夫死了</h2>
+          <p>動物被殺光以後，獵人趕來殺農夫。按加號本來可以補血復活，但這次沒趕上。</p>
+          <button type="button" class="panel-btn" id="dead-close-btn">先留在牧場</button>
+        </div>
+      </div>
+
       <div class="overlay" id="shop-overlay" hidden>
         <div class="panel">
           <h2>存到 100 元了！</h2>
@@ -266,7 +286,7 @@
         </div>
       </div>
 
-      <p class="updated">最後更新：2026/08/23 14:13</p>
+      <p class="updated">最後更新：2026/08/23 14:26</p>
     </div>
   </div>
   <script src="js/main.js"></script>

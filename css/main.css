@@ -1162,7 +1162,29 @@ body {
 }
 
 .stage.playing .people {
-  z-index: 5;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.people.player-run {
+  left: 37%;
+  top: 52%;
+}
+
+.people.dead {
+  filter: grayscale(1) brightness(0.7);
+}
+
+.nuke-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 18;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 58%, #fff6c2 0%, #ffb34a 28%, rgba(255, 80, 20, 0.55) 58%, transparent 76%);
+}
+
+.nuke-flash[hidden] {
+  display: none !important;
 }
 
 .stage.raining {
@@ -1218,7 +1240,9 @@ body {
   left: 1.6%;
   z-index: 8;
   display: flex;
+  flex-wrap: wrap;
   gap: 0.8vmin;
+  max-width: 78%;
   pointer-events: none;
 }
 
@@ -1249,11 +1273,14 @@ body {
 .game-actions {
   position: absolute;
   left: 50%;
-  bottom: 5.5%;
+  bottom: 4.2%;
   transform: translateX(-50%);
   z-index: 8;
   display: flex;
-  gap: 1.2vmin;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.8vmin;
+  width: 88%;
   pointer-events: auto;
 }
 
@@ -1288,6 +1315,23 @@ body {
 .shop-btn {
   background: linear-gradient(180deg, #ffb34a, #e07a1a);
   box-shadow: 0 0.4vmin 0 #9a4e0c;
+}
+
+.plus-btn {
+  min-width: 8vmin;
+  background: linear-gradient(180deg, #7ee0a0, #2f9a58);
+  box-shadow: 0 0.4vmin 0 #1c6a38;
+  font-size: 3vmin;
+}
+
+.add-btn {
+  background: linear-gradient(180deg, #8ad4ef, #2f86b8);
+  box-shadow: 0 0.4vmin 0 #1c5578;
+}
+
+.nuke-btn {
+  background: linear-gradient(180deg, #ff7a3a, #c42010);
+  box-shadow: 0 0.4vmin 0 #7a1208;
 }
 
 .game-btn:active {
@@ -1814,6 +1858,69 @@ body {
   background: #3d6ad4;
   border-radius: 0.3vmin;
   z-index: 2;
+}
+
+.foe.hunter {
+  width: 4.4%;
+  height: 10%;
+}
+
+.foe.hunter .body {
+  background: #5a3a18;
+}
+
+.foe.hunter .head {
+  background: #2a1c10;
+}
+
+.foe.hunter .tag {
+  background: #b85a18;
+}
+
+.foe.hunter .hat {
+  position: absolute;
+  left: 18%;
+  top: -2%;
+  width: 64%;
+  height: 10%;
+  background: #8a5a20;
+  border-radius: 40%;
+  z-index: 3;
+}
+
+.foe.boss {
+  width: 8%;
+  height: 16%;
+  z-index: 7;
+}
+
+.foe.boss .body {
+  background: #4a1030;
+}
+
+.foe.boss.weak .body {
+  background: #6a4a20;
+}
+
+.foe.boss.strong .body,
+.foe.boss.strong .arm,
+.foe.boss.strong .leg {
+  background: #2a0418;
+}
+
+.foe.boss .crown {
+  position: absolute;
+  left: 22%;
+  top: -6%;
+  width: 56%;
+  height: 12%;
+  background: #f0c020;
+  clip-path: polygon(0 100%, 12% 20%, 32% 80%, 50% 0, 68% 80%, 88% 20%, 100% 100%);
+  z-index: 4;
+}
+
+.foe.boss .tag {
+  background: #8a1048;
 }
 
 .foe.lost-hand-left .arm.left,

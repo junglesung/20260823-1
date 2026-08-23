@@ -28,6 +28,8 @@
       btn: "鎖門"
     }
   ];
+  const MAX_ANIMALS = 260;
+  const BOSS_GOAL = 4;
   const LIMBS = ["hand-left", "hand-right", "foot-left", "foot-right"];
   const LIMB_WORDS = {
     "hand-left": "一手",
@@ -47,8 +49,17 @@
   const gameActions = document.getElementById("game-actions");
   const foodBtn = document.getElementById("food-btn");
   const tofuBtn = document.getElementById("tofu-btn");
+  const plusBtn = document.getElementById("plus-btn");
+  const addBtn = document.getElementById("add-btn");
   const umbrellaBtn = document.getElementById("umbrella-btn");
+  const nukeBtn = document.getElementById("nuke-btn");
   const shopBtn = document.getElementById("shop-btn");
+  const peopleEl = document.querySelector(".people");
+  const nukeFlash = document.getElementById("nuke-flash");
+  const deadOverlay = document.getElementById("dead-overlay");
+  const deadCloseBtn = document.getElementById("dead-close-btn");
+  const farmerHpEl = document.getElementById("farmer-hp");
+  const bossProgressEl = document.getElementById("boss-progress");
   const toastEl = document.getElementById("toast");
   const neighborOverlay = document.getElementById("neighbor-overlay");
   const neighborText = document.getElementById("neighbor-text");
@@ -118,6 +129,22 @@
     spawnedFoes: 0,
     expectedFoes: 8,
     eliteSpawned: false,
+    bossesDefeated: 0,
+    nextBossIn: 18,
+    hunterWaveIn: 12,
+    breedCd: 0,
+    hunterHitAcc: 0,
+    breedCheckAcc: 0,
+    keys: {},
+    farmer: {
+      x: 37,
+      y: 52,
+      tx: 37,
+      ty: 52,
+      hp: 100,
+      maxHp: 100,
+      dead: false
+    },
     link: { active: false, animals: [], foe: null, pointer: null }
   };
 
@@ -182,6 +209,11 @@
     animalCountEl.textContent = String(game.animals.length);
     hungryCountEl.textContent = String(hungry);
     foeCountEl.textContent = String(game.foes.length);
+    farmerHpEl.textContent = String(Math.max(0, Math.ceil(game.farmer.hp)));
+    bossProgressEl.textContent = game.bossesDefeated + "/" + BOSS_GOAL;
+    nukeBtn.hidden = !game.foes.some(function (foe) {
+      return foe.role === "boss" && foe.needsNuke && !foe.attacking;
+    });
 
     if (game.weather === "typhoon") {
       weatherLabel.textContent = "颱風雨";
@@ -200,7 +232,11 @@
       weatherValue.textContent = "放晴";
     }
 
-    if (game.hasGem) {
+    if (game.farmer.dead) {
+      goalValue.textContent = "農夫死了";
+    } else if (game.bossesDefeated >= BOSS_GOAL) {
+      goalValue.textContent = "魔王都打完了";
+    } else if (game.hasGem) {
       goalValue.textContent = "最寶石入手";
     } else if (game.won) {
       goalValue.textContent = "已餵飽獲勝";
@@ -242,6 +278,7 @@
       vy: Math.sin(angle) * speed,
       speed: speed,
       hunger: 48 + Math.random() * 52,
+      hp: 100,
       umbrella: false,
       wet: false,
       rope: !!(extras && extras.rope),
@@ -267,9 +304,19 @@
     const role = options.role || "villain";
     const typhoon = !!options.typhoon;
     const el = document.createElement("div");
-    el.className = "foe " + role + (typhoon ? " typhoon" : "");
+    const extraClass = [role];
+    if (typhoon) {
+      extraClass.push("typhoon");
+    }
+    if (options.bossClass) {
+      extraClass.push(options.bossClass);
+    }
+    el.className = "foe " + extraClass.join(" ");
+    const tag = options.tag || (typhoon ? "颱風小偷" : role === "thief" ? "小偷" : role === "hunter" ? "獵人" : role === "boss" ? "魔王" : "壞人");
     el.innerHTML =
       '<div class="foe-sprite">' +
+        (role === "hunter" ? '<div class="hat"></div>' : "") +
+        (role === "boss" ? '<div class="crown"></div>' : "") +
         '<div class="head"></div>' +
         '<div class="eye left"></div>' +
         '<div class="eye right"></div>' +
@@ -282,12 +329,12 @@
         '<div class="leg right"></div>' +
         (role === "thief" ? '<div class="bag"></div>' : "") +
       "</div>" +
-      '<span class="tag">' + (typhoon ? "颱風小偷" : role === "thief" ? "小偷" : "壞人") + "</span>";
+      '<span class="tag">' + tag + "</span>";
 
     foesEl.appendChild(el);
 
     const need = options.need;
-    const speed = role === "thief" ? 7.2 : 4.6;
+    const speed = options.speed || (role === "thief" ? 7.2 : role === "hunter" ? 6.4 : role === "boss" ? 3.2 : 4.6);
     const angle = Math.random() * Math.PI * 2;
     const foe = {
       el: el,
@@ -301,6 +348,7 @@
       need: need,
       money: options.money,
       attacking: false,
+      needsNuke: !!options.needsNuke,
       limbs: LIMBS.slice(),
       limbTimer: 0,
       nextTurn: Math.random(),
@@ -308,7 +356,9 @@
     };
 
     game.foes.push(foe);
-    game.spawnedFoes += 1;
+    if (role === "villain" || role === "thief") {
+      game.spawnedFoes += 1;
+    }
     return foe;
   }
 
@@ -316,6 +366,210 @@
     for (let i = 0; i < count; i += 1) {
       createFoe({ role: "villain", need: 1, money: 6 });
     }
+  }
+
+  function spawnHunters() {
+    for (let i = 0; i < 20; i += 1) {
+      createFoe({
+        role: "hunter",
+        need: 1,
+        money: 4,
+        speed: 6.2 + Math.random() * 1.6,
+        tag: "獵人"
+      });
+    }
+    showToast("一次出現 20 個獵人！快點掉他們，不然會殺光動物。");
+  }
+
+  function spawnBoss() {
+    const roll = Math.random();
+    let options;
+    if (roll < 0.35) {
+      options = { tag: "爛魔王", bossClass: "weak", need: 2, money: 12, needsNuke: false };
+    } else if (roll < 0.65) {
+      options = { tag: "魔王", bossClass: "", need: 6, money: 20, needsNuke: false };
+    } else {
+      const need = 10 + Math.floor(Math.random() * 6);
+      options = { tag: "超強魔王", bossClass: "strong", need: need, money: 36, needsNuke: true };
+    }
+    createFoe({
+      role: "boss",
+      tag: options.tag,
+      bossClass: options.bossClass,
+      need: options.need,
+      money: options.money,
+      needsNuke: options.needsNuke,
+      speed: 2.8
+    });
+    if (options.needsNuke) {
+      showToast(options.tag + "來了，人類打不過！快按核彈。也要打好幾個魔王才行。");
+    } else {
+      showToast(options.tag + "出現了。有的很爛、有的很強，連線動物去打。");
+    }
+    updateHud();
+  }
+
+  function moveFarmer(dt) {
+    if (game.farmer.dead) {
+      return;
+    }
+    const speed = 22;
+    if (game.keys.ArrowLeft || game.keys.KeyA) {
+      game.farmer.tx -= speed * dt;
+    }
+    if (game.keys.ArrowRight || game.keys.KeyD) {
+      game.farmer.tx += speed * dt;
+    }
+    if (game.keys.ArrowUp || game.keys.KeyW) {
+      game.farmer.ty -= speed * dt;
+    }
+    if (game.keys.ArrowDown || game.keys.KeyS) {
+      game.farmer.ty += speed * dt;
+    }
+    game.farmer.tx = Math.max(4, Math.min(88, game.farmer.tx));
+    game.farmer.ty = Math.max(48, Math.min(78, game.farmer.ty));
+
+    const dx = game.farmer.tx - game.farmer.x;
+    const dy = game.farmer.ty - game.farmer.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist > 0.2) {
+      const step = Math.min(dist, 18 * dt);
+      game.farmer.x += (dx / dist) * step;
+      game.farmer.y += (dy / dist) * step;
+    }
+    peopleEl.style.left = game.farmer.x + "%";
+    peopleEl.style.top = game.farmer.y + "%";
+  }
+
+  function killFarmer() {
+    if (game.farmer.dead) {
+      return;
+    }
+    game.farmer.dead = true;
+    game.farmer.hp = 0;
+    game.paused = true;
+    peopleEl.classList.add("dead");
+    deadOverlay.hidden = false;
+    showToast("動物被殺完了，獵人趕來殺農夫，農夫死了。");
+    updateHud();
+  }
+
+  function healAll() {
+    game.farmer.hp = game.farmer.maxHp;
+    game.farmer.dead = false;
+    peopleEl.classList.remove("dead");
+    if (game.paused && deadOverlay.hidden === false) {
+      deadOverlay.hidden = true;
+      game.paused = false;
+    }
+    game.animals.forEach(function (animal) {
+      animal.hp = 100;
+      animal.hunger = Math.min(100, animal.hunger + 35);
+    });
+    if (game.animals.length < 20) {
+      spawnHerd(20 - game.animals.length);
+    }
+    showToast("按了加號！動物和人都補血了，倒下的也復活了。");
+    updateHud();
+  }
+
+  function addTwentyAnimals() {
+    const room = MAX_ANIMALS - game.animals.length;
+    const n = Math.min(20, room);
+    if (n <= 0) {
+      showToast("動物已經太多了。");
+      return;
+    }
+    spawnHerd(n);
+    showToast("一次增加 " + n + " 隻動物。");
+    updateHud();
+  }
+
+  function launchNuke() {
+    const boss = game.foes.find(function (foe) {
+      return foe.role === "boss" && foe.needsNuke && !foe.attacking;
+    });
+    if (!boss) {
+      showToast("現在沒有人類打不過的魔王。");
+      return;
+    }
+    nukeFlash.hidden = false;
+    window.setTimeout(function () {
+      nukeFlash.hidden = true;
+    }, 700);
+    defeatFoe(boss);
+    showToast("核彈發射！超強魔王被轟倒了。");
+  }
+
+  function checkBreeding() {
+    if (game.breedCd > 0 || game.animals.length >= MAX_ANIMALS) {
+      return;
+    }
+    const list = game.animals;
+    for (let i = 0; i < list.length; i += 1) {
+      for (let j = i + 1; j < list.length; j += 1) {
+        const dx = list[i].x - list[j].x;
+        const dy = list[i].y - list[j].y;
+        if (dx * dx + dy * dy < 9) {
+          const room = MAX_ANIMALS - game.animals.length;
+          const n = Math.min(100, room);
+          if (n > 0) {
+            spawnHerd(n);
+            game.breedCd = 8;
+            showToast("動物撞在一起，生出 " + n + " 隻！");
+          }
+          return;
+        }
+      }
+    }
+  }
+
+  function hunterThink(dt) {
+    const hunters = game.foes.filter(function (foe) {
+      return foe.role === "hunter" && !foe.attacking;
+    });
+    if (!hunters.length) {
+      return;
+    }
+
+    if (!game.animals.length) {
+      hunters.forEach(function (hunter) {
+        hunter.vx = game.farmer.x < hunter.x ? -hunter.speed : hunter.speed;
+        hunter.vy = game.farmer.y < hunter.y ? -hunter.speed : hunter.speed;
+        const dx = hunter.x - game.farmer.x;
+        const dy = hunter.y - game.farmer.y;
+        if (dx * dx + dy * dy < 36) {
+          game.farmer.hp -= 22 * dt;
+        }
+      });
+      if (game.farmer.hp <= 0) {
+        killFarmer();
+      }
+      return;
+    }
+
+    game.hunterHitAcc += dt;
+    hunters.forEach(function (hunter) {
+      let nearest = game.animals[0];
+      let best = 9999;
+      game.animals.forEach(function (animal) {
+        const dx = hunter.x - animal.x;
+        const dy = hunter.y - animal.y;
+        const d = dx * dx + dy * dy;
+        if (d < best) {
+          best = d;
+          nearest = animal;
+        }
+      });
+      hunter.vx = nearest.x < hunter.x ? -hunter.speed : hunter.speed;
+      hunter.vy = nearest.y < hunter.y ? -hunter.speed : hunter.speed;
+      if (best < 16) {
+        nearest.hp -= 28 * dt;
+        if (nearest.hp <= 0) {
+          removeAnimal(nearest);
+        }
+      }
+    });
   }
 
   function fillRainLayer(heavy) {
@@ -424,7 +678,13 @@
     game.foes = game.foes.filter(function (item) {
       return item !== foe;
     });
-    showToast("壞人被幹掉了，錢掉下來了！");
+    if (foe.role === "boss") {
+      game.bossesDefeated += 1;
+      game.nextBossIn = 14;
+      showToast("魔王倒下了！還要再打幾隻，現在 " + game.bossesDefeated + "/" + BOSS_GOAL + "。");
+    } else {
+      showToast("壞人被幹掉了，錢掉下來了！");
+    }
     maybeGiveGem();
     updateHud();
   }
@@ -521,8 +781,11 @@
     gameActions.hidden = false;
     spawnHerd(100);
     spawnVillains(3);
+    peopleEl.classList.add("player-run");
+    peopleEl.style.left = game.farmer.x + "%";
+    peopleEl.style.top = game.farmer.y + "%";
     updateHud();
-    showToast("100 隻動物來了！按食物或豆腐餵牠們。看到黑色壞人就快按！");
+    showToast("我們是農夫，點草地或用方向鍵跑步。加號補血，加20隻會增加動物。");
   }
 
   function unitCenter(unit, isFoe) {
@@ -628,6 +891,9 @@
     }
     const hit = unitFromEvent(event);
     if (!hit) {
+      const point = stagePoint(event);
+      game.farmer.tx = point.x - 3;
+      game.farmer.ty = point.y - 6;
       return;
     }
     if (hit.type === "foe") {
@@ -695,6 +961,39 @@
       return;
     }
     dropFood("tofu");
+  });
+
+  plusBtn.addEventListener("click", function () {
+    if (!game.playing) {
+      return;
+    }
+    healAll();
+  });
+
+  addBtn.addEventListener("click", function () {
+    if (!game.playing || game.paused) {
+      return;
+    }
+    addTwentyAnimals();
+  });
+
+  nukeBtn.addEventListener("click", function () {
+    if (!game.playing || game.paused) {
+      return;
+    }
+    launchNuke();
+  });
+
+  deadCloseBtn.addEventListener("click", function () {
+    deadOverlay.hidden = true;
+  });
+
+  window.addEventListener("keydown", function (event) {
+    game.keys[event.code] = true;
+  });
+
+  window.addEventListener("keyup", function (event) {
+    game.keys[event.code] = false;
   });
 
   umbrellaBtn.addEventListener("click", function () {
@@ -824,6 +1123,41 @@
     if (game.paused) {
       requestAnimationFrame(tick);
       return;
+    }
+
+    moveFarmer(dt);
+
+    if (game.breedCd > 0) {
+      game.breedCd -= dt;
+    }
+
+    game.hunterWaveIn -= dt;
+    if (game.hunterWaveIn <= 0) {
+      const livingHunters = game.foes.filter(function (foe) {
+        return foe.role === "hunter";
+      }).length;
+      if (livingHunters < 8) {
+        spawnHunters();
+      }
+      game.hunterWaveIn = 45;
+    }
+
+    if (game.bossesDefeated < BOSS_GOAL) {
+      game.nextBossIn -= dt;
+      const hasBoss = game.foes.some(function (foe) {
+        return foe.role === "boss";
+      });
+      if (!hasBoss && game.nextBossIn <= 0) {
+        spawnBoss();
+        game.nextBossIn = 999;
+      }
+    }
+
+    hunterThink(dt);
+    game.breedCheckAcc += dt;
+    if (game.breedCheckAcc >= 0.35) {
+      game.breedCheckAcc = 0;
+      checkBreeding();
     }
 
     if (game.raining) {
