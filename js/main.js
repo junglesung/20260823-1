@@ -365,8 +365,8 @@
     if (wasTyphoon) {
       showToast("颱風停了。");
     } else {
-      game.typhoonIn = 40;
-      showToast("雨停了。再過一分鐘內可能下颱風雨，小偷會更強。");
+      game.typhoonIn = 60;
+      showToast("雨停了。再過一分鐘會下颱風雨，小偷裝備會更強。");
     }
   }
 
