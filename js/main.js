@@ -29,7 +29,9 @@
     }
   ];
   const MAX_ANIMALS = 260;
-  const BOSS_GOAL = 4;
+  const BOSS_GOAL = 10;
+  const BOSS_FIELD = { minX: 4, maxX: 90, minY: 14, maxY: 80 };
+  const MAX_AMMO = 8;
   const LIMBS = ["hand-left", "hand-right", "foot-left", "foot-right"];
   const LIMB_WORDS = {
     "hand-left": "一手",
@@ -51,6 +53,15 @@
   const tofuBtn = document.getElementById("tofu-btn");
   const plusBtn = document.getElementById("plus-btn");
   const addBtn = document.getElementById("add-btn");
+  const gunBtn = document.getElementById("gun-btn");
+  const reloadBtn = document.getElementById("reload-btn");
+  const skipReloadBtn = document.getElementById("skip-reload-btn");
+  const bulletsEl = document.getElementById("bullets");
+  const aimMark = document.getElementById("aim-mark");
+  const worldBoom = document.getElementById("world-boom");
+  const ammoValue = document.getElementById("ammo-value");
+  const reloadCard = document.getElementById("reload-card");
+  const reloadValue = document.getElementById("reload-value");
   const umbrellaBtn = document.getElementById("umbrella-btn");
   const nukeBtn = document.getElementById("nuke-btn");
   const shopBtn = document.getElementById("shop-btn");
@@ -145,6 +156,12 @@
       maxHp: 100,
       dead: false
     },
+    ammo: MAX_AMMO,
+    reloadIn: -1,
+    gunMode: false,
+    convertIn: -1,
+    bullets: [],
+    stageBosses: false,
     link: { active: false, animals: [], foe: null, pointer: null }
   };
 
@@ -211,6 +228,15 @@
     foeCountEl.textContent = String(game.foes.length);
     farmerHpEl.textContent = String(Math.max(0, Math.ceil(game.farmer.hp)));
     bossProgressEl.textContent = game.bossesDefeated + "/" + BOSS_GOAL;
+    ammoValue.textContent = String(game.ammo);
+    if (game.reloadIn >= 0) {
+      reloadCard.hidden = false;
+      reloadValue.textContent = Math.max(0, Math.ceil(game.reloadIn)) + "秒";
+      reloadBtn.classList.add("urgent");
+    } else {
+      reloadCard.hidden = true;
+      reloadBtn.classList.remove("urgent");
+    }
     nukeBtn.hidden = !game.foes.some(function (foe) {
       return foe.role === "boss" && foe.needsNuke && !foe.attacking;
     });
@@ -263,6 +289,7 @@
         '<div class="herd-eye right"></div>' +
         '<div class="herd-mouth"></div>' +
         '<div class="herd-body"></div>' +
+        '<div class="animal-gun"></div>' +
       "</div>";
 
     herdEl.appendChild(el);
@@ -281,6 +308,7 @@
       hp: 100,
       umbrella: false,
       wet: false,
+      armed: false,
       rope: !!(extras && extras.rope),
       nextTurn: Math.random() * 1.4,
       bobPhase: Math.random() * Math.PI * 2
@@ -340,12 +368,13 @@
       el: el,
       role: role,
       typhoon: typhoon,
-      x: rand(FIELD.minX, FIELD.maxX),
-      y: rand(FIELD.minY, FIELD.maxY - 4),
+      x: options.x != null ? options.x : rand(FIELD.minX, FIELD.maxX),
+      y: options.y != null ? options.y : rand(FIELD.minY, FIELD.maxY - 4),
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
       speed: speed,
       need: need,
+      hp: options.hp != null ? options.hp : 1,
       money: options.money,
       attacking: false,
       needsNuke: !!options.needsNuke,
@@ -406,6 +435,145 @@
     } else {
       showToast(options.tag + "出現了。有的很爛、有的很強，連線動物去打。");
     }
+    updateHud();
+  }
+
+  function spawnBigBossStage() {
+    if (game.stageBosses) {
+      return;
+    }
+    game.stageBosses = true;
+    game.nextBossIn = 9999;
+    for (let i = 0; i < 5; i += 1) {
+      createFoe({
+        role: "boss",
+        tag: "大魔王",
+        bossClass: "strong",
+        need: 8,
+        hp: 12,
+        money: 18,
+        needsNuke: i === 4,
+        speed: 2.2,
+        x: 8 + i * 18,
+        y: 18 + Math.random() * 10
+      });
+    }
+    for (let i = 0; i < 5; i += 1) {
+      createFoe({
+        role: "boss",
+        tag: "大魔王",
+        bossClass: i % 2 ? "weak" : "",
+        need: 5,
+        hp: 10,
+        money: 16,
+        needsNuke: false,
+        speed: 2.6,
+        x: 10 + i * 17,
+        y: 60 + Math.random() * 10
+      });
+    }
+    showToast("這一關出現十隻大魔王！上半部五隻，下半部五隻。");
+    updateHud();
+  }
+
+  function convertToGunSquad() {
+    while (game.animals.length > 20) {
+      removeAnimal(game.animals[game.animals.length - 1]);
+    }
+    game.animals.forEach(function (animal) {
+      animal.armed = true;
+      animal.el.classList.add("armed");
+    });
+    game.ammo = MAX_AMMO;
+    spawnBigBossStage();
+    showToast("一百隻換成二十隻，牠們都有機關槍了！按槍道，再點你要打的地方。");
+    updateHud();
+  }
+
+  function fireAt(point) {
+    if (game.ammo <= 0) {
+      if (game.reloadIn < 0) {
+        startReloadCountdown();
+      }
+      showToast("子彈沒了！十秒內趕快按裝子彈，不然槍會爆開。");
+      return;
+    }
+
+    game.ammo -= 1;
+    aimMark.style.left = point.x + "%";
+    aimMark.style.top = point.y + "%";
+    aimMark.hidden = false;
+    window.setTimeout(function () {
+      aimMark.hidden = true;
+    }, 700);
+
+    game.animals.filter(function (animal) {
+      return animal.armed;
+    }).forEach(function (animal) {
+      const from = unitCenter(animal, false);
+      const dx = point.x - from.x;
+      const dy = point.y - from.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const el = document.createElement("div");
+      el.className = "bullet";
+      el.style.left = from.x + "%";
+      el.style.top = from.y + "%";
+      bulletsEl.appendChild(el);
+      game.bullets.push({
+        el: el,
+        x: from.x,
+        y: from.y,
+        vx: (dx / dist) * 86,
+        vy: (dy / dist) * 86,
+        life: 1.1
+      });
+    });
+
+    if (game.ammo <= 0) {
+      startReloadCountdown();
+    }
+    updateHud();
+  }
+
+  function startReloadCountdown() {
+    if (game.reloadIn >= 0) {
+      return;
+    }
+    game.reloadIn = 10;
+    showToast("看到沒子彈了！十秒內把機關槍裝子彈。不想裝就按「不裝了」。");
+  }
+
+  function reloadGuns() {
+    game.ammo = MAX_AMMO;
+    game.reloadIn = -1;
+    reloadBtn.classList.remove("urgent");
+    showToast("子彈裝滿了！");
+    updateHud();
+  }
+
+  function explodeEmptyGuns() {
+    game.reloadIn = -1;
+    while (game.animals.length > 1) {
+      removeAnimal(game.animals[game.animals.length - 1]);
+    }
+    if (game.animals[0]) {
+      game.animals[0].hp = 35;
+    }
+    game.farmer.hp = Math.max(8, game.farmer.hp - 35);
+    showToast("沒裝子彈，機關槍自己爆開！隔壁和自己的動物都受傷，瞬間只剩一隻。");
+    updateHud();
+  }
+
+  function skipReloadWorldBoom() {
+    game.reloadIn = -1;
+    game.ammo = 0;
+    worldBoom.hidden = false;
+    stage.classList.add("world-boom-on");
+    window.setTimeout(function () {
+      worldBoom.hidden = true;
+      stage.classList.remove("world-boom-on");
+    }, 1200);
+    showToast("整個世界爆炸了，但動物是好人，牠們沒有爆炸。");
     updateHud();
   }
 
@@ -781,11 +949,12 @@
     gameActions.hidden = false;
     spawnHerd(100);
     spawnVillains(3);
+    game.convertIn = 2.2;
     peopleEl.classList.add("player-run");
     peopleEl.style.left = game.farmer.x + "%";
     peopleEl.style.top = game.farmer.y + "%";
     updateHud();
-    showToast("我們是農夫，點草地或用方向鍵跑步。加號補血，加20隻會增加動物。");
+    showToast("先從一百隻開始，接著會換成二十隻帶機關槍的動物。");
   }
 
   function unitCenter(unit, isFoe) {
@@ -889,6 +1058,10 @@
     if (event.target.closest("button, .overlay, .panel, .hud, .updated")) {
       return;
     }
+    if (game.gunMode) {
+      fireAt(stagePoint(event));
+      return;
+    }
     const hit = unitFromEvent(event);
     if (!hit) {
       const point = stagePoint(event);
@@ -975,6 +1148,29 @@
       return;
     }
     addTwentyAnimals();
+  });
+
+  gunBtn.addEventListener("click", function () {
+    if (!game.playing || game.paused) {
+      return;
+    }
+    game.gunMode = !game.gunMode;
+    stage.classList.toggle("gun-aim", game.gunMode);
+    showToast(game.gunMode ? "槍道開啟！所有機關槍會瞄準你點的地方發射。" : "槍道關閉。");
+  });
+
+  reloadBtn.addEventListener("click", function () {
+    if (!game.playing) {
+      return;
+    }
+    reloadGuns();
+  });
+
+  skipReloadBtn.addEventListener("click", function () {
+    if (!game.playing || game.paused) {
+      return;
+    }
+    skipReloadWorldBoom();
   });
 
   nukeBtn.addEventListener("click", function () {
@@ -1127,6 +1323,47 @@
 
     moveFarmer(dt);
 
+    if (game.convertIn > 0) {
+      game.convertIn -= dt;
+      if (game.convertIn <= 0) {
+        convertToGunSquad();
+      }
+    }
+
+    if (game.reloadIn >= 0) {
+      game.reloadIn -= dt;
+      if (game.reloadIn <= 0) {
+        explodeEmptyGuns();
+      }
+    }
+
+    game.bullets.forEach(function (bullet) {
+      bullet.x += bullet.vx * dt;
+      bullet.y += bullet.vy * dt;
+      bullet.life -= dt;
+      bullet.el.style.left = bullet.x + "%";
+      bullet.el.style.top = bullet.y + "%";
+      const hitFoe = game.foes.find(function (foe) {
+        const c = unitCenter(foe, true);
+        const dx = c.x - bullet.x;
+        const dy = c.y - bullet.y;
+        return dx * dx + dy * dy < 16;
+      });
+      if (hitFoe) {
+        bullet.life = 0;
+        hitFoe.hp -= 1;
+        if (hitFoe.hp <= 0) {
+          defeatFoe(hitFoe);
+        }
+      }
+      if (bullet.life <= 0 && bullet.el.parentNode) {
+        bullet.el.parentNode.removeChild(bullet.el);
+      }
+    });
+    game.bullets = game.bullets.filter(function (bullet) {
+      return bullet.life > 0;
+    });
+
     if (game.breedCd > 0) {
       game.breedCd -= dt;
     }
@@ -1142,7 +1379,7 @@
       game.hunterWaveIn = 45;
     }
 
-    if (game.bossesDefeated < BOSS_GOAL) {
+    if (!game.stageBosses && game.bossesDefeated < BOSS_GOAL) {
       game.nextBossIn -= dt;
       const hasBoss = game.foes.some(function (foe) {
         return foe.role === "boss";
@@ -1245,7 +1482,7 @@
         }
         return;
       }
-      moveMover(foe, FIELD, dt, 0.2);
+      moveMover(foe, foe.role === "boss" ? BOSS_FIELD : FIELD, dt, 0.2);
     });
 
     if (game.link.active) {

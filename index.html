@@ -211,7 +211,15 @@
         </div>
         <div class="hud-card">
           <span>魔王</span>
-          <strong id="boss-progress">0/4</strong>
+          <strong id="boss-progress">0/10</strong>
+        </div>
+        <div class="hud-card">
+          <span>子彈</span>
+          <strong id="ammo-value">8</strong>
+        </div>
+        <div class="hud-card" id="reload-card" hidden>
+          <span>裝彈倒數</span>
+          <strong id="reload-value">10秒</strong>
         </div>
         <div class="hud-card goal">
           <span>目標</span>
@@ -223,7 +231,7 @@
         <button type="button" class="start-btn" id="start-btn">
           開始遊戲
         </button>
-        <p class="start-hint">點草地讓農夫跑。加號補血，動物相撞會生小動物</p>
+        <p class="start-hint">一百隻會換成二十隻機關槍部隊。按槍道瞄準射擊，沒子彈要快裝</p>
       </div>
 
       <div class="game-actions" id="game-actions" hidden>
@@ -231,12 +239,18 @@
         <button type="button" class="game-btn tofu-btn" id="tofu-btn">豆腐</button>
         <button type="button" class="game-btn plus-btn" id="plus-btn">＋</button>
         <button type="button" class="game-btn add-btn" id="add-btn">加20隻</button>
+        <button type="button" class="game-btn gun-btn" id="gun-btn">槍道</button>
+        <button type="button" class="game-btn reload-btn" id="reload-btn">裝子彈</button>
+        <button type="button" class="game-btn skip-reload-btn" id="skip-reload-btn">不裝了</button>
         <button type="button" class="game-btn umbrella-btn" id="umbrella-btn" hidden>雨傘</button>
         <button type="button" class="game-btn nuke-btn" id="nuke-btn" hidden>核彈</button>
         <button type="button" class="game-btn shop-btn" id="shop-btn" hidden>升級牧場</button>
       </div>
 
+      <div id="bullets" class="bullets"></div>
+      <div class="aim-mark" id="aim-mark" hidden></div>
       <div class="nuke-flash" id="nuke-flash" hidden></div>
+      <div class="world-boom" id="world-boom" hidden></div>
       <p class="toast" id="toast" hidden></p>
 
       <div class="overlay" id="neighbor-overlay" hidden>
@@ -286,7 +300,7 @@
         </div>
       </div>
 
-      <p class="updated">最後更新：2026/08/23 14:26</p>
+      <p class="updated">最後更新：2026/08/23 14:38</p>
     </div>
   </div>
   <script src="js/main.js"></script>
