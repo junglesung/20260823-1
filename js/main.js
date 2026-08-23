@@ -36,8 +36,8 @@
   const TOFU_X = 200;
   const ALL_X = 100;
   const GAME_X = 200;
-  const CLONE_COUNT = 100;
-  const MEGA_CLONES = 10000;
+  const CLONE_COUNT = 5;
+  const GOLD_KEY_COST = 10;
   const LIMBS = ["hand-left", "hand-right", "foot-left", "foot-right"];
   const LIMB_WORDS = {
     "hand-left": "一手",
@@ -121,7 +121,7 @@
   const game = {
     playing: false,
     paused: false,
-    money: 10 * GAME_X,
+    money: 10,
     animals: [],
     foes: [],
     foods: [],
@@ -307,8 +307,7 @@
         '<div class="herd-body"></div>' +
         '<div class="animal-gun"></div>' +
       "</div>" +
-      '<div class="clone-swarm" aria-hidden="true"></div>' +
-      '<div class="clones">' + buildCloneDots(16) + "</div>";
+      '<div class="clones">' + buildCloneDots(CLONE_COUNT) + "</div>";
 
     herdEl.appendChild(el);
 
@@ -434,6 +433,7 @@
   }
 
   function spawnHunters() {
+    return;
     for (let i = 0; i < 20; i += 1) {
       createFoe({
         role: "hunter",
@@ -521,7 +521,7 @@
 
   function convertToGunSquad() {
     game.converting = true;
-    while (game.animals.length > 20) {
+    while (game.animals.length > 1) {
       removeAnimal(game.animals[game.animals.length - 1], true);
     }
     game.converting = false;
@@ -531,7 +531,7 @@
     });
     game.ammo = MAX_AMMO;
     spawnBigBossStage();
-    showToast("每隻動物有 " + CLONE_COUNT + " 個分身，開火時像 " + MEGA_CLONES + " 次分身一起打。");
+    showToast("只留一隻動物，身邊有五個分身。黃金鑰匙 10 元就可以。");
     updateHud();
   }
 
@@ -557,7 +557,7 @@
     }).forEach(function (animal) {
       const from = unitCenter(animal, false);
       spawnBullet(from.x, from.y, point, false);
-      const shown = 8;
+      const shown = CLONE_COUNT;
       for (let i = 0; i < shown; i += 1) {
         const rad = (i / shown) * Math.PI * 2;
         spawnBullet(from.x + Math.cos(rad) * 3.2, from.y + Math.sin(rad) * 3.6, point, true);
@@ -705,8 +705,8 @@
       animal.hp = 100;
       animal.hunger = Math.min(100, animal.hunger + 35);
     });
-    if (game.animals.length < 20) {
-      spawnHerd(20 - game.animals.length);
+    if (game.animals.length < 1) {
+      spawnHerd(1);
     }
     showToast("按了加號！動物和人都補血了，倒下的也復活了。");
     updateHud();
@@ -920,7 +920,7 @@
         life: 0.9 + Math.random() * 0.4
       });
     }
-    game.money += amount * GAME_X;
+    game.money += amount;
   }
 
   function eruptBoss(foe) {
@@ -1022,7 +1022,9 @@
   }
 
   function finishNeighborRescue() {
-    spawnHerd(36, { rope: true });
+    if (game.animals.length < 1) {
+      spawnHerd(1, { rope: true });
+    }
     game.doorLocked = true;
     doorLock.hidden = false;
     game.paused = false;
@@ -1039,7 +1041,7 @@
     game.shopUnlocked = true;
     shopBtn.hidden = false;
     shopOverlay.hidden = false;
-    showToast("存到 100 元了！可以去別的牧場工作，也可以升級。");
+    showToast("黃金鑰匙 10 元就夠了！可以去工作，也可以升級。");
   }
 
   function tryUpgrade(flagName, cost, button, doneText, onDone) {
@@ -1067,14 +1069,14 @@
     stage.classList.add("playing");
     hud.hidden = false;
     gameActions.hidden = false;
-    spawnHerd(100);
+    spawnHerd(1);
     spawnVillains(3);
-    game.convertIn = 2.2;
+    game.convertIn = 0.2;
     peopleEl.classList.add("player-run");
     peopleEl.style.left = game.farmer.x + "%";
     peopleEl.style.top = game.farmer.y + "%";
     updateHud();
-    showToast("先從一百隻開始，接著會換成二十隻帶機關槍的動物。");
+    showToast("只留一隻動物、五個分身。房子和獵人都去掉了。黃金鑰匙 10 元就可以。");
   }
 
   function unitCenter(unit, isFoe) {
@@ -1491,16 +1493,7 @@
       game.breedCd -= dt;
     }
 
-    game.hunterWaveIn -= dt;
-    if (game.hunterWaveIn <= 0) {
-      const livingHunters = game.foes.filter(function (foe) {
-        return foe.role === "hunter";
-      }).length;
-      if (livingHunters < 8) {
-        spawnHunters();
-      }
-      game.hunterWaveIn = 45;
-    }
+    game.hunterWaveIn = 9999;
 
     if (!game.stageBosses && game.bossesDefeated < BOSS_GOAL) {
       game.nextBossIn -= dt;
@@ -1707,7 +1700,7 @@
       }
     }
 
-    if (game.money >= 100 * GAME_X) {
+    if (game.money >= GOLD_KEY_COST) {
       unlockShop();
     }
 

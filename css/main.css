@@ -221,6 +221,11 @@ body {
   height: 26%;
 }
 
+.house,
+.scene > .animal {
+  display: none !important;
+}
+
 .house {
   position: absolute;
   left: 18%;
@@ -1422,7 +1427,7 @@ body {
   margin: -8% 0 0 -8%;
   border-radius: 50%;
   border: 0.12vmin solid rgba(255, 255, 255, 0.7);
-  transform: rotate(calc(var(--i) * 22.5deg)) translateY(-175%);
+  transform: rotate(calc(var(--i) * 72deg)) translateY(-175%);
   box-shadow: 0 0 0.25vmin rgba(0, 0, 0, 0.2);
 }
 
