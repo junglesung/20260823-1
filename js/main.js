@@ -290,6 +290,18 @@
         '<div class="herd-mouth"></div>' +
         '<div class="herd-body"></div>' +
         '<div class="animal-gun"></div>' +
+      "</div>" +
+      '<div class="clones">' +
+        '<div class="mini-clone" style="--i:0"></div>' +
+        '<div class="mini-clone" style="--i:1"></div>' +
+        '<div class="mini-clone" style="--i:2"></div>' +
+        '<div class="mini-clone" style="--i:3"></div>' +
+        '<div class="mini-clone" style="--i:4"></div>' +
+        '<div class="mini-clone" style="--i:5"></div>' +
+        '<div class="mini-clone" style="--i:6"></div>' +
+        '<div class="mini-clone" style="--i:7"></div>' +
+        '<div class="mini-clone" style="--i:8"></div>' +
+        '<div class="mini-clone" style="--i:9"></div>' +
       "</div>";
 
     herdEl.appendChild(el);
@@ -378,6 +390,8 @@
       money: options.money,
       attacking: false,
       needsNuke: !!options.needsNuke,
+      hitByClone: false,
+      cloneCoinCd: 0,
       limbs: LIMBS.slice(),
       limbTimer: 0,
       nextTurn: Math.random(),
@@ -486,7 +500,7 @@
     });
     game.ammo = MAX_AMMO;
     spawnBigBossStage();
-    showToast("一百隻換成二十隻，牠們都有機關槍了！按槍道，再點你要打的地方。");
+    showToast("二十隻都有十個小分身。分身打中大魔王和小士兵，壞人會掉更多錢。");
     updateHud();
   }
 
@@ -511,28 +525,53 @@
       return animal.armed;
     }).forEach(function (animal) {
       const from = unitCenter(animal, false);
-      const dx = point.x - from.x;
-      const dy = point.y - from.y;
-      const dist = Math.hypot(dx, dy) || 1;
-      const el = document.createElement("div");
-      el.className = "bullet";
-      el.style.left = from.x + "%";
-      el.style.top = from.y + "%";
-      bulletsEl.appendChild(el);
-      game.bullets.push({
-        el: el,
-        x: from.x,
-        y: from.y,
-        vx: (dx / dist) * 86,
-        vy: (dy / dist) * 86,
-        life: 1.1
-      });
+      spawnBullet(from.x, from.y, point, false);
+      for (let i = 0; i < 10; i += 1) {
+        const rad = (i / 10) * Math.PI * 2;
+        spawnBullet(from.x + Math.cos(rad) * 3.2, from.y + Math.sin(rad) * 3.6, point, true);
+      }
     });
 
     if (game.ammo <= 0) {
       startReloadCountdown();
     }
     updateHud();
+  }
+
+  function spawnBullet(x, y, point, fromClone) {
+    const dx = point.x - x;
+    const dy = point.y - y;
+    const dist = Math.hypot(dx, dy) || 1;
+    const el = document.createElement("div");
+    el.className = "bullet" + (fromClone ? " clone-bullet" : "");
+    el.style.left = x + "%";
+    el.style.top = y + "%";
+    bulletsEl.appendChild(el);
+    game.bullets.push({
+      el: el,
+      x: x,
+      y: y,
+      vx: (dx / dist) * (fromClone ? 78 : 86),
+      vy: (dy / dist) * (fromClone ? 78 : 86),
+      life: fromClone ? 0.95 : 1.1,
+      fromClone: fromClone
+    });
+  }
+
+  function isSoldierOrBoss(foe) {
+    return foe.role === "boss" || foe.role === "hunter" || foe.role === "villain" || foe.role === "thief";
+  }
+
+  function rewardCloneHit(foe) {
+    foe.hitByClone = true;
+    if (!isSoldierOrBoss(foe)) {
+      return;
+    }
+    if (foe.cloneCoinCd > 0) {
+      return;
+    }
+    foe.cloneCoinCd = 0.35;
+    dropCoins(foe.x + 1.2, foe.y + 1, foe.role === "boss" ? 4 : 2);
   }
 
   function startReloadCountdown() {
@@ -839,7 +878,8 @@
   }
 
   function defeatFoe(foe) {
-    dropCoins(foe.x + 2, foe.y + 2, foe.money);
+    const pay = foe.hitByClone ? Math.round(foe.money * 2.6) + (foe.role === "boss" ? 12 : 6) : foe.money;
+    dropCoins(foe.x + 2, foe.y + 2, pay);
     if (foe.el.parentNode) {
       foe.el.parentNode.removeChild(foe.el);
     }
@@ -851,7 +891,7 @@
       game.nextBossIn = 14;
       showToast("魔王倒下了！還要再打幾隻，現在 " + game.bossesDefeated + "/" + BOSS_GOAL + "。");
     } else {
-      showToast("壞人被幹掉了，錢掉下來了！");
+      showToast(foe.hitByClone ? "小分身打中了，壞人掉更多錢！" : "壞人被幹掉了，錢掉下來了！");
     }
     maybeGiveGem();
     updateHud();
@@ -1352,6 +1392,9 @@
       if (hitFoe) {
         bullet.life = 0;
         hitFoe.hp -= 1;
+        if (bullet.fromClone) {
+          rewardCloneHit(hitFoe);
+        }
         if (hitFoe.hp <= 0) {
           defeatFoe(hitFoe);
         }
@@ -1470,6 +1513,16 @@
     });
 
     game.foes.forEach(function (foe) {
+      if (foe.cloneCoinCd > 0) {
+        foe.cloneCoinCd -= dt;
+      }
+      game.animals.forEach(function (animal) {
+        const dx = animal.x + 2.3 - (foe.x + 2.6);
+        const dy = animal.y + 3.6 - (foe.y + 5.5);
+        if (dx * dx + dy * dy < 42) {
+          rewardCloneHit(foe);
+        }
+      });
       if (foe.attacking) {
         foe.limbTimer -= dt;
         if (foe.limbTimer <= 0 && foe.limbs.length) {
