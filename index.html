@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>開心動物</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+  <div class="viewport">
+    <div class="stage" id="stage" role="img" aria-label="開心動物農場主畫面">
+      <div class="sky">
+        <div class="sun" aria-hidden="true"></div>
+        <div class="cloud cloud-a" aria-hidden="true"></div>
+        <div class="cloud cloud-b" aria-hidden="true"></div>
+        <div class="cloud cloud-c" aria-hidden="true"></div>
+      </div>
+
+      <div class="hills" aria-hidden="true">
+        <div class="hill hill-back"></div>
+        <div class="hill hill-mid"></div>
+        <div class="hill hill-front"></div>
+      </div>
+
+      <header class="title-wrap">
+        <p class="farm-label">我的農場</p>
+        <h1 class="farm-name">開心動物</h1>
+      </header>
+
+      <div class="scene">
+        <div class="tree tree-left" aria-hidden="true">
+          <span class="tree-canopy"></span>
+          <span class="tree-trunk"></span>
+        </div>
+        <div class="tree tree-right" aria-hidden="true">
+          <span class="tree-canopy"></span>
+          <span class="tree-trunk"></span>
+        </div>
+
+        <div class="house" aria-label="農舍">
+          <div class="house-roof"></div>
+          <div class="house-chimney">
+            <span class="smoke s1"></span>
+            <span class="smoke s2"></span>
+            <span class="smoke s3"></span>
+          </div>
+          <div class="house-body">
+            <div class="house-window left"></div>
+            <div class="house-window right"></div>
+            <div class="house-door"></div>
+          </div>
+          <div class="house-base"></div>
+        </div>
+
+        <div class="people">
+          <div class="person farmer" aria-label="農夫">
+            <div class="hat"></div>
+            <div class="head"></div>
+            <div class="body"></div>
+            <div class="arm left"></div>
+            <div class="arm right"></div>
+            <div class="leg left"></div>
+            <div class="leg right"></div>
+          </div>
+          <div class="person child" aria-label="小孩">
+            <div class="head"></div>
+            <div class="hair"></div>
+            <div class="body"></div>
+            <div class="arm left"></div>
+            <div class="arm right"></div>
+            <div class="leg left"></div>
+            <div class="leg right"></div>
+          </div>
+        </div>
+
+        <div class="pond" aria-hidden="true"></div>
+        <div class="flowers" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+
+        <div class="animal cow" aria-label="乳牛">
+          <div class="ear left"></div>
+          <div class="ear right"></div>
+          <div class="head"></div>
+          <div class="snout"></div>
+          <div class="body"></div>
+          <div class="spot a"></div>
+          <div class="spot b"></div>
+          <div class="leg l1"></div>
+          <div class="leg l2"></div>
+          <div class="leg l3"></div>
+          <div class="leg l4"></div>
+          <div class="tail"></div>
+          <span class="name-tag">乳牛</span>
+        </div>
+
+        <div class="animal pig" aria-label="小豬">
+          <div class="ear left"></div>
+          <div class="ear right"></div>
+          <div class="head"></div>
+          <div class="snout"></div>
+          <div class="body"></div>
+          <div class="leg l1"></div>
+          <div class="leg l2"></div>
+          <div class="leg l3"></div>
+          <div class="leg l4"></div>
+          <div class="tail"></div>
+          <span class="name-tag">小豬</span>
+        </div>
+
+        <div class="animal sheep" aria-label="綿羊">
+          <div class="fluff"></div>
+          <div class="head"></div>
+          <div class="ear left"></div>
+          <div class="ear right"></div>
+          <div class="leg l1"></div>
+          <div class="leg l2"></div>
+          <div class="leg l3"></div>
+          <div class="leg l4"></div>
+          <span class="name-tag">綿羊</span>
+        </div>
+
+        <div class="animal chicken" aria-label="小雞">
+          <div class="comb"></div>
+          <div class="head"></div>
+          <div class="beak"></div>
+          <div class="body"></div>
+          <div class="wing"></div>
+          <div class="leg left"></div>
+          <div class="leg right"></div>
+          <span class="name-tag">小雞</span>
+        </div>
+
+        <div class="animal duck" aria-label="小鴨">
+          <div class="head"></div>
+          <div class="beak"></div>
+          <div class="body"></div>
+          <div class="wing"></div>
+          <span class="name-tag">小鴨</span>
+        </div>
+
+        <div class="animal kitten" aria-label="小貓">
+          <div class="ear left"></div>
+          <div class="ear right"></div>
+          <div class="head"></div>
+          <div class="body"></div>
+          <div class="leg l1"></div>
+          <div class="leg l2"></div>
+          <div class="leg l3"></div>
+          <div class="leg l4"></div>
+          <div class="tail"></div>
+          <span class="name-tag">小貓</span>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="start-btn" id="start-btn" disabled>
+          開始遊戲
+        </button>
+        <p class="start-hint">遊戲規則稍後公布，按鈕暫時無法使用</p>
+      </div>
+
+      <p class="updated">最後更新：2026/08/23 13:41</p>
+    </div>
+  </div>
+  <script src="js/main.js"></script>
+</body>
+</html>
