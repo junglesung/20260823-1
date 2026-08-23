@@ -1,5 +1,5 @@
 (function () {
-  const KINDS = ["cow", "pig", "sheep", "chicken", "duck", "kitten"];
+  const KINDS = ["cow", "pig", "sheep", "chicken", "duck", "kitten", "dog", "horse", "rabbit", "goat", "fox"];
   const FIELD = { minX: 2, maxX: 92, minY: 52, maxY: 80 };
   const TITLE_FIELD = { minX: 3, maxX: 86, minY: 54, maxY: 78 };
   const TITLE_START = {
@@ -28,7 +28,7 @@
       btn: "鎖門"
     }
   ];
-  const MAX_ANIMALS = 260;
+  const MAX_ANIMALS = 5;
   const BOSS_GOAL = 3;
   const BOSS_FIELD = { minX: 4, maxX: 90, minY: 14, maxY: 80 };
   const MAX_AMMO = 8;
@@ -36,7 +36,7 @@
   const TOFU_X = 200;
   const ALL_X = 100;
   const GAME_X = 200;
-  const CLONE_COUNT = 5;
+  const CLONE_COUNT = 25;
   const GOLD_KEY_COST = 10;
   const LIMBS = ["hand-left", "hand-right", "foot-left", "foot-right"];
   const LIMB_WORDS = {
@@ -499,8 +499,7 @@
         y: item.y
       });
     });
-    spawnRascals(100);
-    showToast("三隻瑪利歐大魔王都變成飲料杯，會噴液體和火山岩漿！每隻動物有一百個分身。");
+    showToast("沒有搗蛋了。最多五隻動物，種類更多，每隻有二十五個分身。");
     updateHud();
   }
 
@@ -521,7 +520,7 @@
 
   function convertToGunSquad() {
     game.converting = true;
-    while (game.animals.length > 1) {
+    while (game.animals.length > MAX_ANIMALS) {
       removeAnimal(game.animals[game.animals.length - 1], true);
     }
     game.converting = false;
@@ -531,7 +530,7 @@
     });
     game.ammo = MAX_AMMO;
     spawnBigBossStage();
-    showToast("只留一隻動物，身邊有五個分身。黃金鑰匙 10 元就可以。");
+    showToast("最多五隻動物，種類變多了。每隻有五倍分身，一共二十五個。");
     updateHud();
   }
 
@@ -705,8 +704,8 @@
       animal.hp = 100;
       animal.hunger = Math.min(100, animal.hunger + 35);
     });
-    if (game.animals.length < 1) {
-      spawnHerd(1);
+    if (game.animals.length < MAX_ANIMALS) {
+      spawnHerd(MAX_ANIMALS - game.animals.length);
     }
     showToast("按了加號！動物和人都補血了，倒下的也復活了。");
     updateHud();
@@ -714,7 +713,7 @@
 
   function addTwentyAnimals() {
     const room = MAX_ANIMALS - game.animals.length;
-    const n = Math.min(20, room);
+    const n = Math.min(5, room);
     if (n <= 0) {
       showToast("動物已經太多了。");
       return;
@@ -1069,14 +1068,14 @@
     stage.classList.add("playing");
     hud.hidden = false;
     gameActions.hidden = false;
-    spawnHerd(1);
+    spawnHerd(5);
     spawnVillains(3);
     game.convertIn = 0.2;
     peopleEl.classList.add("player-run");
     peopleEl.style.left = game.farmer.x + "%";
     peopleEl.style.top = game.farmer.y + "%";
     updateHud();
-    showToast("只留一隻動物、五個分身。房子和獵人都去掉了。黃金鑰匙 10 元就可以。");
+    showToast("五隻不同動物上場，沒有搗蛋。分身加五倍。");
   }
 
   function unitCenter(unit, isFoe) {

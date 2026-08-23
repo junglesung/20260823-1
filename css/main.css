@@ -1427,7 +1427,7 @@ body {
   margin: -8% 0 0 -8%;
   border-radius: 50%;
   border: 0.12vmin solid rgba(255, 255, 255, 0.7);
-  transform: rotate(calc(var(--i) * 72deg)) translateY(-175%);
+  transform: rotate(calc(var(--i) * 14.4deg)) translateY(-185%);
   box-shadow: 0 0 0.25vmin rgba(0, 0, 0, 0.2);
 }
 
@@ -1437,6 +1437,11 @@ body {
 .herd-animal.chicken .mini-clone { background: #fff4d2; }
 .herd-animal.duck .mini-clone { background: #ffe566; }
 .herd-animal.kitten .mini-clone { background: #f2b05a; }
+.herd-animal.dog .mini-clone { background: #c8a06a; }
+.herd-animal.horse .mini-clone { background: #8a5a32; }
+.herd-animal.rabbit .mini-clone { background: #f4e8ff; }
+.herd-animal.goat .mini-clone { background: #e8e0d0; }
+.herd-animal.fox .mini-clone { background: #e07020; }
 
 .bullet.clone-bullet {
   width: 0.7%;
@@ -1726,6 +1731,26 @@ body {
 .herd-animal.kitten .herd-body,
 .herd-animal.kitten .herd-head,
 .herd-animal.kitten .herd-ear { background: #f2b05a; }
+
+.herd-animal.dog .herd-body,
+.herd-animal.dog .herd-head,
+.herd-animal.dog .herd-ear { background: #c8a06a; }
+
+.herd-animal.horse .herd-body,
+.herd-animal.horse .herd-head { background: #8a5a32; }
+.herd-animal.horse .herd-ear { background: #5a3a18; }
+
+.herd-animal.rabbit .herd-body,
+.herd-animal.rabbit .herd-head { background: #f4e8ff; }
+.herd-animal.rabbit .herd-ear { background: #e8c8f4; }
+
+.herd-animal.goat .herd-body { background: #e8e0d0; }
+.herd-animal.goat .herd-head,
+.herd-animal.goat .herd-ear { background: #d4c4a8; }
+
+.herd-animal.fox .herd-body,
+.herd-animal.fox .herd-head,
+.herd-animal.fox .herd-ear { background: #e07020; }
 
 .herd-animal.facing-left .herd-sprite {
   transform: scaleX(-1);
