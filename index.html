@@ -82,7 +82,9 @@
 
         <div class="pond" aria-hidden="true"></div>
         <div id="herd" class="herd"></div>
+        <div id="foes" class="foes"></div>
         <div id="foods" class="foods"></div>
+        <svg class="link-layer" id="link-layer" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
         <div class="flowers" aria-hidden="true">
           <span></span><span></span><span></span><span></span><span></span>
         </div>
@@ -199,9 +201,13 @@
           <span id="weather-label">下雨倒數</span>
           <strong id="weather-value">60秒</strong>
         </div>
+        <div class="hud-card">
+          <span>壞人</span>
+          <strong id="foe-count">0</strong>
+        </div>
         <div class="hud-card goal">
           <span>目標</span>
-          <strong>存到 100 元</strong>
+          <strong id="goal-value">餵飽全場就贏</strong>
         </div>
       </div>
 
@@ -209,11 +215,12 @@
         <button type="button" class="start-btn" id="start-btn">
           開始遊戲
         </button>
-        <p class="start-hint">餵飽動物、下雨撐傘，存到 100 元就能升級牧場</p>
+        <p class="start-hint">餵飽全場就贏。黑色的是壞人，紅色動物連線去打藍色壞人</p>
       </div>
 
       <div class="game-actions" id="game-actions" hidden>
         <button type="button" class="game-btn food-btn" id="food-btn">食物</button>
+        <button type="button" class="game-btn tofu-btn" id="tofu-btn">豆腐</button>
         <button type="button" class="game-btn umbrella-btn" id="umbrella-btn" hidden>雨傘</button>
         <button type="button" class="game-btn shop-btn" id="shop-btn" hidden>升級牧場</button>
       </div>
@@ -225,6 +232,23 @@
           <h2>只剩一隻動物了！</h2>
           <p id="neighbor-text">趕快去隔壁把動物的繩子偷來，把牠們帶回來，然後把門鎖住。</p>
           <button type="button" class="panel-btn" id="neighbor-btn">去隔壁</button>
+        </div>
+      </div>
+
+      <div class="overlay" id="win-overlay" hidden>
+        <div class="panel">
+          <h2>全部餵飽了！</h2>
+          <p>食物和豆腐都把動物餵飽，你贏了這場照顧比賽。</p>
+          <button type="button" class="panel-btn" id="win-close-btn">繼續看牧場</button>
+        </div>
+      </div>
+
+      <div class="overlay" id="gem-overlay" hidden>
+        <div class="panel gem-panel">
+          <h2>得到角色最寶石</h2>
+          <div class="top-gem" aria-hidden="true"></div>
+          <p>場上的壞人和小偷都解決了，最寶石屬於你。</p>
+          <button type="button" class="panel-btn" id="gem-close-btn">收起寶石</button>
         </div>
       </div>
 
@@ -242,7 +266,7 @@
         </div>
       </div>
 
-      <p class="updated">最後更新：2026/08/23 14:00</p>
+      <p class="updated">最後更新：2026/08/23 14:13</p>
     </div>
   </div>
   <script src="js/main.js"></script>

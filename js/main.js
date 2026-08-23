@@ -28,15 +28,25 @@
       btn: "鎖門"
     }
   ];
+  const LIMBS = ["hand-left", "hand-right", "foot-left", "foot-right"];
+  const LIMB_WORDS = {
+    "hand-left": "一手",
+    "hand-right": "一手",
+    "foot-left": "一腳",
+    "foot-right": "一腳"
+  };
 
   const stage = document.getElementById("stage");
   const startBtn = document.getElementById("start-btn");
   const hud = document.getElementById("hud");
   const herdEl = document.getElementById("herd");
+  const foesEl = document.getElementById("foes");
   const foodsEl = document.getElementById("foods");
+  const linkLayer = document.getElementById("link-layer");
   const rainLayer = document.getElementById("rain-layer");
   const gameActions = document.getElementById("game-actions");
   const foodBtn = document.getElementById("food-btn");
+  const tofuBtn = document.getElementById("tofu-btn");
   const umbrellaBtn = document.getElementById("umbrella-btn");
   const shopBtn = document.getElementById("shop-btn");
   const toastEl = document.getElementById("toast");
@@ -45,6 +55,10 @@
   const neighborBtn = document.getElementById("neighbor-btn");
   const shopOverlay = document.getElementById("shop-overlay");
   const shopCloseBtn = document.getElementById("shop-close-btn");
+  const winOverlay = document.getElementById("win-overlay");
+  const winCloseBtn = document.getElementById("win-close-btn");
+  const gemOverlay = document.getElementById("gem-overlay");
+  const gemCloseBtn = document.getElementById("gem-close-btn");
   const workBtn = document.getElementById("work-btn");
   const upgradeFarmBtn = document.getElementById("upgrade-farm-btn");
   const upgradeAnimalBtn = document.getElementById("upgrade-animal-btn");
@@ -53,8 +67,10 @@
   const moneyValue = document.getElementById("money-value");
   const animalCountEl = document.getElementById("animal-count");
   const hungryCountEl = document.getElementById("hungry-count");
+  const foeCountEl = document.getElementById("foe-count");
   const weatherLabel = document.getElementById("weather-label");
   const weatherValue = document.getElementById("weather-value");
+  const goalValue = document.getElementById("goal-value");
 
   const titleAnimals = Array.from(document.querySelectorAll(".scene > .animal")).map(function (el) {
     const kind = Object.keys(TITLE_START).find(function (name) {
@@ -79,9 +95,14 @@
     paused: false,
     money: 10,
     animals: [],
+    foes: [],
     foods: [],
+    coins: [],
     raining: false,
+    weather: "clear",
     rainIn: 60,
+    rainLeft: 0,
+    typhoonIn: -1,
     doorLocked: false,
     neighborStep: -1,
     shopUnlocked: false,
@@ -90,7 +111,14 @@
     animalLevel: 0,
     extraFood: 0,
     incomeAcc: 0,
-    toastTimer: 0
+    stealAcc: 0,
+    toastTimer: 0,
+    won: false,
+    hasGem: false,
+    spawnedFoes: 0,
+    expectedFoes: 8,
+    eliteSpawned: false,
+    link: { active: false, animals: [], foe: null, pointer: null }
   };
 
   function rand(min, max) {
@@ -153,13 +181,31 @@
     moneyValue.textContent = String(Math.floor(game.money));
     animalCountEl.textContent = String(game.animals.length);
     hungryCountEl.textContent = String(hungry);
+    foeCountEl.textContent = String(game.foes.length);
 
-    if (game.raining) {
-      weatherLabel.textContent = "天氣";
-      weatherValue.textContent = "下雨中";
-    } else {
+    if (game.weather === "typhoon") {
+      weatherLabel.textContent = "颱風雨";
+      weatherValue.textContent = Math.max(0, Math.ceil(game.rainLeft)) + "秒";
+    } else if (game.raining) {
+      weatherLabel.textContent = "下雨剩餘";
+      weatherValue.textContent = Math.max(0, Math.ceil(game.rainLeft)) + "秒";
+    } else if (game.typhoonIn > 0) {
+      weatherLabel.textContent = "颱風倒數";
+      weatherValue.textContent = Math.max(0, Math.ceil(game.typhoonIn)) + "秒";
+    } else if (game.rainIn > 0) {
       weatherLabel.textContent = "下雨倒數";
       weatherValue.textContent = Math.max(0, Math.ceil(game.rainIn)) + "秒";
+    } else {
+      weatherLabel.textContent = "天氣";
+      weatherValue.textContent = "放晴";
+    }
+
+    if (game.hasGem) {
+      goalValue.textContent = "最寶石入手";
+    } else if (game.won) {
+      goalValue.textContent = "已餵飽獲勝";
+    } else {
+      goalValue.textContent = "餵飽全場就贏";
     }
 
     shopBtn.hidden = !game.shopUnlocked;
@@ -217,28 +263,119 @@
     }
   }
 
-  function startRain() {
-    game.raining = true;
-    stage.classList.add("raining");
+  function createFoe(options) {
+    const role = options.role || "villain";
+    const typhoon = !!options.typhoon;
+    const el = document.createElement("div");
+    el.className = "foe " + role + (typhoon ? " typhoon" : "");
+    el.innerHTML =
+      '<div class="foe-sprite">' +
+        '<div class="head"></div>' +
+        '<div class="eye left"></div>' +
+        '<div class="eye right"></div>' +
+        '<div class="mouth"></div>' +
+        (typhoon ? '<div class="armor"></div>' : "") +
+        '<div class="body"></div>' +
+        '<div class="arm left"></div>' +
+        '<div class="arm right"></div>' +
+        '<div class="leg left"></div>' +
+        '<div class="leg right"></div>' +
+        (role === "thief" ? '<div class="bag"></div>' : "") +
+      "</div>" +
+      '<span class="tag">' + (typhoon ? "颱風小偷" : role === "thief" ? "小偷" : "壞人") + "</span>";
+
+    foesEl.appendChild(el);
+
+    const need = options.need;
+    const speed = role === "thief" ? 7.2 : 4.6;
+    const angle = Math.random() * Math.PI * 2;
+    const foe = {
+      el: el,
+      role: role,
+      typhoon: typhoon,
+      x: rand(FIELD.minX, FIELD.maxX),
+      y: rand(FIELD.minY, FIELD.maxY - 4),
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      speed: speed,
+      need: need,
+      money: options.money,
+      attacking: false,
+      limbs: LIMBS.slice(),
+      limbTimer: 0,
+      nextTurn: Math.random(),
+      bobPhase: Math.random() * Math.PI * 2
+    };
+
+    game.foes.push(foe);
+    game.spawnedFoes += 1;
+    return foe;
+  }
+
+  function spawnVillains(count) {
+    for (let i = 0; i < count; i += 1) {
+      createFoe({ role: "villain", need: 1, money: 6 });
+    }
+  }
+
+  function fillRainLayer(heavy) {
     rainLayer.innerHTML = "";
-    for (let i = 0; i < 48; i += 1) {
+    const drops = heavy ? 72 : 48;
+    for (let i = 0; i < drops; i += 1) {
       const drop = document.createElement("div");
       drop.className = "raindrop";
       drop.style.left = Math.random() * 100 + "%";
       drop.style.animationDelay = Math.random() * 0.9 + "s";
-      drop.style.animationDuration = 0.7 + Math.random() * 0.5 + "s";
+      drop.style.animationDuration = (heavy ? 0.45 : 0.7) + Math.random() * 0.4 + "s";
       rainLayer.appendChild(drop);
     }
     rainLayer.hidden = false;
-    umbrellaBtn.hidden = false;
-    showToast("下雨了！快給動物雨傘，傘要撐在頭上，不可以戳到眼睛。");
   }
 
-  function dropFood() {
-    const count = 1 + game.extraFood;
+  function startRain(typhoon) {
+    game.raining = true;
+    game.weather = typhoon ? "typhoon" : "rain";
+    game.rainLeft = 60;
+    stage.classList.toggle("raining", !typhoon);
+    stage.classList.toggle("typhoon", !!typhoon);
+    fillRainLayer(!!typhoon);
+    umbrellaBtn.hidden = false;
+
+    if (typhoon) {
+      const need = 4 + Math.floor(Math.random() * 5);
+      createFoe({ role: "thief", typhoon: true, need: need, money: 28 });
+      spawnVillains(1);
+      game.eliteSpawned = true;
+      showToast("颱風雨來了！小偷裝備更強，要連 " + need + " 隻紅色動物再拉到藍色壞人。");
+    } else {
+      createFoe({ role: "thief", need: 3, money: 14 });
+      spawnVillains(2);
+      showToast("下雨了！出現小偷。黑色的是壞人，快按，或用紅色動物連線去打。");
+    }
+  }
+
+  function stopRain() {
+    const wasTyphoon = game.weather === "typhoon";
+    game.raining = false;
+    game.weather = "clear";
+    game.rainLeft = 0;
+    stage.classList.remove("raining", "typhoon");
+    rainLayer.hidden = true;
+    umbrellaBtn.hidden = true;
+    if (wasTyphoon) {
+      showToast("颱風停了。");
+    } else {
+      game.typhoonIn = 40;
+      showToast("雨停了。再過一分鐘內可能下颱風雨，小偷會更強。");
+    }
+  }
+
+  function dropFood(kind) {
+    const isTofu = kind === "tofu";
+    const count = (isTofu ? 1 : 1) + game.extraFood;
     for (let i = 0; i < count; i += 1) {
       const el = document.createElement("div");
-      el.className = "food-drop";
+      el.className = "food-drop" + (isTofu ? " tofu" : "");
       const x = rand(8, 90);
       el.style.left = x + "%";
       el.style.top = "6%";
@@ -247,9 +384,27 @@
         el: el,
         x: x,
         y: 6,
-        eaten: false
+        eaten: false,
+        fill: isTofu ? 92 : 58
       });
     }
+  }
+
+  function dropCoins(x, y, amount) {
+    const n = Math.min(8, Math.max(3, Math.round(amount / 4)));
+    for (let i = 0; i < n; i += 1) {
+      const el = document.createElement("div");
+      el.className = "coin-drop";
+      el.style.left = x + rand(-2, 2) + "%";
+      el.style.top = y + "%";
+      stage.appendChild(el);
+      game.coins.push({
+        el: el,
+        y: y,
+        life: 0.9 + Math.random() * 0.4
+      });
+    }
+    game.money += amount;
   }
 
   function removeAnimal(animal) {
@@ -259,6 +414,54 @@
     game.animals = game.animals.filter(function (item) {
       return item !== animal;
     });
+  }
+
+  function defeatFoe(foe) {
+    dropCoins(foe.x + 2, foe.y + 2, foe.money);
+    if (foe.el.parentNode) {
+      foe.el.parentNode.removeChild(foe.el);
+    }
+    game.foes = game.foes.filter(function (item) {
+      return item !== foe;
+    });
+    showToast("壞人被幹掉了，錢掉下來了！");
+    maybeGiveGem();
+    updateHud();
+  }
+
+  function startLimbAttack(foe) {
+    if (foe.attacking) {
+      return;
+    }
+    foe.attacking = true;
+    foe.limbTimer = 0.05;
+    showToast("連線成功！動物開始一腳一手地打。");
+  }
+
+  function maybeGiveGem() {
+    if (game.hasGem || !game.eliteSpawned || game.foes.length > 0) {
+      return;
+    }
+    if (game.spawnedFoes < game.expectedFoes) {
+      return;
+    }
+    game.hasGem = true;
+    gemOverlay.hidden = false;
+    showToast("全部壞人都解決了，得到角色最寶石！");
+  }
+
+  function maybeWin() {
+    if (game.won || !game.animals.length) {
+      return;
+    }
+    const allFull = game.animals.every(function (animal) {
+      return animal.hunger >= 90;
+    });
+    if (allFull) {
+      game.won = true;
+      winOverlay.hidden = false;
+      showToast("食物全部餵飽，你贏了！");
+    }
   }
 
   function beginNeighborRescue() {
@@ -317,9 +520,164 @@
     hud.hidden = false;
     gameActions.hidden = false;
     spawnHerd(100);
+    spawnVillains(3);
     updateHud();
-    showToast("100 隻動物來了！牠們餓了要按「食物」，食物會從天上掉下來。");
+    showToast("100 隻動物來了！按食物或豆腐餵牠們。看到黑色壞人就快按！");
   }
+
+  function unitCenter(unit, isFoe) {
+    return {
+      x: unit.x + (isFoe ? 2.6 : 2.3),
+      y: unit.y + (isFoe ? 5.5 : 3.6)
+    };
+  }
+
+  function stagePoint(event) {
+    const rect = stage.getBoundingClientRect();
+    return {
+      x: ((event.clientX - rect.left) / rect.width) * 100,
+      y: ((event.clientY - rect.top) / rect.height) * 100
+    };
+  }
+
+  function unitFromEvent(event) {
+    const el = document.elementFromPoint(event.clientX, event.clientY);
+    if (!el) {
+      return null;
+    }
+    const animalEl = el.closest(".herd-animal");
+    if (animalEl) {
+      const animal = game.animals.find(function (item) {
+        return item.el === animalEl;
+      });
+      if (animal) {
+        return { type: "animal", unit: animal };
+      }
+    }
+    const foeEl = el.closest(".foe");
+    if (foeEl) {
+      const foe = game.foes.find(function (item) {
+        return item.el === foeEl;
+      });
+      if (foe) {
+        return { type: "foe", unit: foe };
+      }
+    }
+    return null;
+  }
+
+  function clearLink() {
+    game.link.active = false;
+    game.link.animals.forEach(function (animal) {
+      animal.el.classList.remove("linked");
+    });
+    if (game.link.foe) {
+      game.link.foe.el.classList.remove("linked-target");
+    }
+    game.link.animals = [];
+    game.link.foe = null;
+    game.link.pointer = null;
+    linkLayer.innerHTML = "";
+  }
+
+  function drawLink() {
+    const points = game.link.animals.map(function (animal) {
+      return unitCenter(animal, false);
+    });
+    if (game.link.foe) {
+      points.push(unitCenter(game.link.foe, true));
+    } else if (game.link.pointer) {
+      points.push(game.link.pointer);
+    }
+
+    let html = "";
+    for (let i = 0; i < points.length - 1; i += 1) {
+      const a = points[i];
+      const b = points[i + 1];
+      const last = i === points.length - 2 && game.link.foe;
+      html +=
+        '<line x1="' + a.x + '" y1="' + a.y + '" x2="' + b.x + '" y2="' + b.y +
+        '" stroke="' + (last ? "#3d7cff" : "#e02424") +
+        '" stroke-width="1.1"></line>';
+    }
+    linkLayer.innerHTML = html;
+  }
+
+  function finishLink() {
+    const foe = game.link.foe;
+    const count = game.link.animals.length;
+    if (!foe || !count) {
+      clearLink();
+      return;
+    }
+    if (count < foe.need) {
+      showToast("這隻要 " + foe.need + " 隻紅色動物連線，現在只有 " + count + " 隻。");
+      clearLink();
+      return;
+    }
+    startLimbAttack(foe);
+    clearLink();
+  }
+
+  function onPointerDown(event) {
+    if (!game.playing || game.paused) {
+      return;
+    }
+    if (event.target.closest("button, .overlay, .panel, .hud, .updated")) {
+      return;
+    }
+    const hit = unitFromEvent(event);
+    if (!hit) {
+      return;
+    }
+    if (hit.type === "foe") {
+      if (hit.unit.need <= 1 && !hit.unit.attacking) {
+        defeatFoe(hit.unit);
+        return;
+      }
+      showToast("這隻比較強，先拉紅色動物連線，最後拉到這個藍色壞人。");
+      return;
+    }
+    event.preventDefault();
+    game.link.active = true;
+    game.link.animals = [hit.unit];
+    game.link.foe = null;
+    hit.unit.el.classList.add("linked");
+    game.link.pointer = stagePoint(event);
+    drawLink();
+  }
+
+  function onPointerMove(event) {
+    if (!game.link.active) {
+      return;
+    }
+    game.link.pointer = stagePoint(event);
+    const hit = unitFromEvent(event);
+    if (hit && hit.type === "animal" && game.link.animals.indexOf(hit.unit) === -1) {
+      game.link.animals.push(hit.unit);
+      hit.unit.el.classList.add("linked");
+    }
+    if (hit && hit.type === "foe") {
+      if (game.link.foe && game.link.foe !== hit.unit) {
+        game.link.foe.el.classList.remove("linked-target");
+      }
+      game.link.foe = hit.unit;
+      hit.unit.el.classList.add("linked-target");
+    }
+    drawLink();
+  }
+
+  function onPointerUp() {
+    if (!game.link.active) {
+      return;
+    }
+    finishLink();
+  }
+
+  stage.addEventListener("pointerdown", onPointerDown);
+  stage.addEventListener("pointermove", onPointerMove);
+  window.addEventListener("pointerup", onPointerUp);
+  window.addEventListener("pointercancel", onPointerUp);
 
   startBtn.addEventListener("click", function () {
     startGame();
@@ -329,7 +687,14 @@
     if (!game.playing || game.paused) {
       return;
     }
-    dropFood();
+    dropFood("food");
+  });
+
+  tofuBtn.addEventListener("click", function () {
+    if (!game.playing || game.paused) {
+      return;
+    }
+    dropFood("tofu");
   });
 
   umbrellaBtn.addEventListener("click", function () {
@@ -367,6 +732,14 @@
 
   shopCloseBtn.addEventListener("click", function () {
     shopOverlay.hidden = true;
+  });
+
+  winCloseBtn.addEventListener("click", function () {
+    winOverlay.hidden = true;
+  });
+
+  gemCloseBtn.addEventListener("click", function () {
+    gemOverlay.hidden = true;
   });
 
   workBtn.addEventListener("click", function () {
@@ -409,7 +782,7 @@
       upgradeFoodBtn.disabled = true;
       upgradeFoodBtn.textContent = "食物已經很多";
     }
-    showToast("現在按一次食物會掉下更多！");
+    showToast("現在按一次食物或豆腐會掉下更多！");
     updateHud();
   });
 
@@ -453,10 +826,20 @@
       return;
     }
 
-    if (!game.raining) {
+    if (game.raining) {
+      game.rainLeft -= dt;
+      if (game.rainLeft <= 0) {
+        stopRain();
+      }
+    } else if (game.rainIn > 0) {
       game.rainIn -= dt;
       if (game.rainIn <= 0) {
-        startRain();
+        startRain(false);
+      }
+    } else if (game.typhoonIn > 0) {
+      game.typhoonIn -= dt;
+      if (game.typhoonIn <= 0) {
+        startRain(true);
       }
     }
 
@@ -496,7 +879,7 @@
         if (nearbyFood.el.parentNode) {
           nearbyFood.el.parentNode.removeChild(nearbyFood.el);
         }
-        animal.hunger = Math.min(100, animal.hunger + 58 + game.animalLevel * 8);
+        animal.hunger = Math.min(100, animal.hunger + nearbyFood.fill + game.animalLevel * 8);
         animal.el.classList.remove("hungry");
         game.money += 1;
       } else if (hungry) {
@@ -513,6 +896,38 @@
 
     game.foods = game.foods.filter(function (food) {
       return !food.eaten;
+    });
+
+    game.foes.forEach(function (foe) {
+      if (foe.attacking) {
+        foe.limbTimer -= dt;
+        if (foe.limbTimer <= 0 && foe.limbs.length) {
+          const limb = foe.limbs.shift();
+          foe.el.classList.add("lost-" + limb);
+          showToast(LIMB_WORDS[limb] + "！");
+          foe.limbTimer = 0.38;
+        } else if (!foe.limbs.length && foe.limbTimer <= 0) {
+          defeatFoe(foe);
+        }
+        return;
+      }
+      moveMover(foe, FIELD, dt, 0.2);
+    });
+
+    if (game.link.active) {
+      drawLink();
+    }
+
+    game.coins.forEach(function (coin) {
+      coin.y -= 18 * dt;
+      coin.life -= dt;
+      coin.el.style.top = coin.y + "%";
+      if (coin.life <= 0 && coin.el.parentNode) {
+        coin.el.parentNode.removeChild(coin.el);
+      }
+    });
+    game.coins = game.coins.filter(function (coin) {
+      return coin.life > 0;
     });
 
     if (!game.doorLocked && game.neighborStep < 0) {
@@ -548,10 +963,22 @@
       }
     }
 
+    const livingThief = game.foes.some(function (foe) {
+      return foe.role === "thief" && !foe.attacking;
+    });
+    if (livingThief) {
+      game.stealAcc += dt;
+      if (game.stealAcc >= 4) {
+        game.stealAcc = 0;
+        game.money = Math.max(0, game.money - 1);
+      }
+    }
+
     if (game.money >= 100) {
       unlockShop();
     }
 
+    maybeWin();
     updateHud();
     requestAnimationFrame(tick);
   }
