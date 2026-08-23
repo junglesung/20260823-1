@@ -2081,6 +2081,66 @@ body {
   background: #8a1048;
 }
 
+.foe.rascal {
+  width: 3.2%;
+  height: 5.6%;
+}
+
+.foe.rascal::before {
+  border-color: #ff8a2a;
+  box-shadow: 0 0 0.5vmin rgba(255, 138, 42, 0.4);
+}
+
+.rascal-body {
+  position: absolute;
+  left: 18%;
+  top: 12%;
+  width: 64%;
+  height: 58%;
+  background: radial-gradient(circle at 35% 30%, #ffd36a, #e07020);
+  border-radius: 46%;
+}
+
+.rascal-body::after {
+  content: "";
+  position: absolute;
+  left: 22%;
+  top: 32%;
+  width: 16%;
+  height: 16%;
+  background: #1c140e;
+  border-radius: 50%;
+  box-shadow: 1.1vmin 0 0 #1c140e;
+}
+
+.foe.rascal .tag {
+  background: #e07020;
+  font-size: 1vmin;
+}
+
+.drink-can {
+  position: absolute;
+  z-index: 9;
+  width: 1.4%;
+  height: 2.6%;
+  margin-left: -0.7%;
+  background: linear-gradient(90deg, #3aa0e0, #1c6aaa);
+  border-radius: 0.3vmin;
+  pointer-events: none;
+}
+
+.trash-bag {
+  position: absolute;
+  z-index: 8;
+  width: 1.6%;
+  height: 1.8%;
+  margin-left: -0.8%;
+  background: #6a6a52;
+  border-radius: 40% 40% 30% 30%;
+  box-shadow: 0 0.15vmin 0 #3a3a28;
+  pointer-events: none;
+}
+
 .foe.lost-hand-left .arm.left,
 .foe.lost-hand-right .arm.right,
 .foe.lost-foot-left .leg.left,

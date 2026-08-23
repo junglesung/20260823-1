@@ -29,7 +29,7 @@
     }
   ];
   const MAX_ANIMALS = 260;
-  const BOSS_GOAL = 10;
+  const BOSS_GOAL = 3;
   const BOSS_FIELD = { minX: 4, maxX: 90, minY: 14, maxY: 80 };
   const MAX_AMMO = 8;
   const LIMBS = ["hand-left", "hand-right", "foot-left", "foot-right"];
@@ -162,6 +162,7 @@
     convertIn: -1,
     bullets: [],
     stageBosses: false,
+    converting: false,
     link: { active: false, animals: [], foe: null, pointer: null }
   };
 
@@ -352,29 +353,33 @@
       extraClass.push(options.bossClass);
     }
     el.className = "foe " + extraClass.join(" ");
-    const tag = options.tag || (typhoon ? "颱風小偷" : role === "thief" ? "小偷" : role === "hunter" ? "獵人" : role === "boss" ? "魔王" : "壞人");
-    el.innerHTML =
-      '<div class="foe-sprite">' +
-        (role === "hunter" ? '<div class="hat"></div>' : "") +
-        (role === "boss" ? '<div class="crown"></div>' : "") +
-        '<div class="head"></div>' +
-        '<div class="eye left"></div>' +
-        '<div class="eye right"></div>' +
-        '<div class="mouth"></div>' +
-        (typhoon ? '<div class="armor"></div>' : "") +
-        '<div class="body"></div>' +
-        '<div class="arm left"></div>' +
-        '<div class="arm right"></div>' +
-        '<div class="leg left"></div>' +
-        '<div class="leg right"></div>' +
-        (role === "thief" ? '<div class="bag"></div>' : "") +
-      "</div>" +
-      '<span class="tag">' + tag + "</span>";
+    const tag = options.tag || (typhoon ? "颱風小偷" : role === "thief" ? "小偷" : role === "hunter" ? "獵人" : role === "boss" ? "魔王" : role === "rascal" ? "搗蛋" : "壞人");
+    if (role === "rascal") {
+      el.innerHTML = '<div class="rascal-body"></div><span class="tag">搗蛋</span>';
+    } else {
+      el.innerHTML =
+        '<div class="foe-sprite">' +
+          (role === "hunter" ? '<div class="hat"></div>' : "") +
+          (role === "boss" ? '<div class="crown"></div>' : "") +
+          '<div class="head"></div>' +
+          '<div class="eye left"></div>' +
+          '<div class="eye right"></div>' +
+          '<div class="mouth"></div>' +
+          (typhoon ? '<div class="armor"></div>' : "") +
+          '<div class="body"></div>' +
+          '<div class="arm left"></div>' +
+          '<div class="arm right"></div>' +
+          '<div class="leg left"></div>' +
+          '<div class="leg right"></div>' +
+          (role === "thief" ? '<div class="bag"></div>' : "") +
+        "</div>" +
+        '<span class="tag">' + tag + "</span>";
+    }
 
     foesEl.appendChild(el);
 
     const need = options.need;
-    const speed = options.speed || (role === "thief" ? 7.2 : role === "hunter" ? 6.4 : role === "boss" ? 3.2 : 4.6);
+    const speed = options.speed || (role === "thief" ? 7.2 : role === "hunter" ? 6.4 : role === "boss" ? 3.2 : role === "rascal" ? 5.8 : 4.6);
     const angle = Math.random() * Math.PI * 2;
     const foe = {
       el: el,
@@ -458,42 +463,51 @@
     }
     game.stageBosses = true;
     game.nextBossIn = 9999;
-    for (let i = 0; i < 5; i += 1) {
+    const bosses = [
+      { x: 46, y: 20, tag: "大魔王", bossClass: "strong", need: 6, hp: 10, needsNuke: true },
+      { x: 18, y: 64, tag: "大魔王", bossClass: "weak", need: 3, hp: 8, needsNuke: false },
+      { x: 72, y: 66, tag: "大魔王", bossClass: "", need: 4, hp: 8, needsNuke: false }
+    ];
+    bosses.forEach(function (item) {
       createFoe({
         role: "boss",
-        tag: "大魔王",
-        bossClass: "strong",
-        need: 8,
-        hp: 12,
-        money: 18,
-        needsNuke: i === 4,
-        speed: 2.2,
-        x: 8 + i * 18,
-        y: 18 + Math.random() * 10
+        tag: item.tag,
+        bossClass: item.bossClass,
+        need: item.need,
+        hp: item.hp,
+        money: 20,
+        needsNuke: item.needsNuke,
+        speed: 2.4,
+        x: item.x,
+        y: item.y
       });
-    }
-    for (let i = 0; i < 5; i += 1) {
-      createFoe({
-        role: "boss",
-        tag: "大魔王",
-        bossClass: i % 2 ? "weak" : "",
-        need: 5,
-        hp: 10,
-        money: 16,
-        needsNuke: false,
-        speed: 2.6,
-        x: 10 + i * 17,
-        y: 60 + Math.random() * 10
-      });
-    }
-    showToast("這一關出現十隻大魔王！上半部五隻，下半部五隻。");
+    });
+    spawnRascals(100);
+    showToast("這一關只打三隻魔王。姐姐那次有 100 個搗蛋，牠們也來了！");
     updateHud();
   }
 
-  function convertToGunSquad() {
-    while (game.animals.length > 20) {
-      removeAnimal(game.animals[game.animals.length - 1]);
+  function spawnRascals(count) {
+    for (let i = 0; i < count; i += 1) {
+      createFoe({
+        role: "rascal",
+        tag: "搗蛋",
+        need: 1,
+        hp: 1,
+        money: 3,
+        speed: 5.2 + Math.random() * 2.4,
+        x: rand(4, 90),
+        y: rand(16, 78)
+      });
     }
+  }
+
+  function convertToGunSquad() {
+    game.converting = true;
+    while (game.animals.length > 20) {
+      removeAnimal(game.animals[game.animals.length - 1], true);
+    }
+    game.converting = false;
     game.animals.forEach(function (animal) {
       animal.armed = true;
       animal.el.classList.add("armed");
@@ -559,7 +573,7 @@
   }
 
   function isSoldierOrBoss(foe) {
-    return foe.role === "boss" || foe.role === "hunter" || foe.role === "villain" || foe.role === "thief";
+    return foe.role === "boss" || foe.role === "hunter" || foe.role === "villain" || foe.role === "thief" || foe.role === "rascal";
   }
 
   function rewardCloneHit(foe) {
@@ -709,26 +723,48 @@
   }
 
   function checkBreeding() {
-    if (game.breedCd > 0 || game.animals.length >= MAX_ANIMALS) {
+    return;
+  }
+
+  function throwTrashFrom(x, y) {
+    const target = game.foes.find(function (foe) {
+      return !foe.attacking;
+    });
+    if (!target) {
       return;
     }
-    const list = game.animals;
-    for (let i = 0; i < list.length; i += 1) {
-      for (let j = i + 1; j < list.length; j += 1) {
-        const dx = list[i].x - list[j].x;
-        const dy = list[i].y - list[j].y;
-        if (dx * dx + dy * dy < 9) {
-          const room = MAX_ANIMALS - game.animals.length;
-          const n = Math.min(100, room);
-          if (n > 0) {
-            spawnHerd(n);
-            game.breedCd = 8;
-            showToast("動物撞在一起，生出 " + n + " 隻！");
-          }
-          return;
-        }
+    const drink = document.createElement("div");
+    drink.className = "drink-can";
+    drink.style.left = x + "%";
+    drink.style.top = y + "%";
+    stage.appendChild(drink);
+    window.setTimeout(function () {
+      if (drink.parentNode) {
+        drink.parentNode.removeChild(drink);
       }
-    }
+    }, 280);
+
+    const to = unitCenter(target, true);
+    const el = document.createElement("div");
+    el.className = "trash-bag";
+    el.style.left = x + "%";
+    el.style.top = y + "%";
+    bulletsEl.appendChild(el);
+    const dx = to.x - x;
+    const dy = to.y - y;
+    const dist = Math.hypot(dx, dy) || 1;
+    game.bullets.push({
+      el: el,
+      x: x,
+      y: y,
+      vx: (dx / dist) * 62,
+      vy: (dy / dist) * 62,
+      life: 1.4,
+      fromClone: false,
+      trash: true,
+      target: target
+    });
+    showToast("喝完飲料，把垃圾丟給壞人！");
   }
 
   function hunterThink(dt) {
@@ -868,7 +904,10 @@
     game.money += amount;
   }
 
-  function removeAnimal(animal) {
+  function removeAnimal(animal, silent) {
+    if (!silent && game.playing && !game.converting) {
+      throwTrashFrom(animal.x + 2, animal.y + 2);
+    }
     if (animal.el.parentNode) {
       animal.el.parentNode.removeChild(animal.el);
     }
@@ -1391,8 +1430,8 @@
       });
       if (hitFoe) {
         bullet.life = 0;
-        hitFoe.hp -= 1;
-        if (bullet.fromClone) {
+        hitFoe.hp -= bullet.trash ? 3 : 1;
+        if (bullet.fromClone || bullet.trash) {
           rewardCloneHit(hitFoe);
         }
         if (hitFoe.hp <= 0) {
