@@ -390,6 +390,50 @@ body {
   background: #f7d2b0;
 }
 
+.person .eye {
+  position: absolute;
+  z-index: 3;
+  width: 11%;
+  height: 6%;
+  background: #1c140e;
+  border-radius: 50%;
+  box-shadow: 0.08vmin 0.08vmin 0 rgba(255, 255, 255, 0.5) inset;
+}
+
+.person.farmer .eye {
+  top: 16%;
+}
+
+.person.farmer .eye.left { left: 32%; }
+.person.farmer .eye.right { left: 54%; }
+
+.person.child .eye {
+  top: 12%;
+}
+
+.person.child .eye.left { left: 30%; }
+.person.child .eye.right { left: 52%; }
+
+.person .mouth {
+  position: absolute;
+  z-index: 3;
+  width: 20%;
+  height: 7%;
+  border: 0.22vmin solid #c45a4a;
+  border-color: transparent transparent #c45a4a;
+  border-radius: 0 0 50% 50%;
+}
+
+.person.farmer .mouth {
+  left: 38%;
+  top: 25%;
+}
+
+.person.child .mouth {
+  left: 36%;
+  top: 21%;
+}
+
 .person.child .hair {
   position: absolute;
   top: 2%;
@@ -484,7 +528,8 @@ body {
 
 .animal {
   position: absolute;
-  animation: bob 2.6s ease-in-out infinite;
+  z-index: 4;
+  will-change: left, top, transform;
 }
 
 .animal .eye {
@@ -493,6 +538,11 @@ body {
   background: #1c140e;
   border-radius: 50%;
   box-shadow: 0.12vmin 0.12vmin 0 rgba(255, 255, 255, 0.55) inset;
+}
+
+.animal .mouth {
+  position: absolute;
+  z-index: 4;
 }
 
 .animal .name-tag {
@@ -508,9 +558,17 @@ body {
   box-shadow: 0 0.2vmin 0.5vmin rgba(0, 0, 0, 0.12);
 }
 
-@keyframes bob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-0.6vmin); }
+.animal.facing-left .name-tag {
+  transform: translateX(-50%) scaleX(-1);
+}
+
+.animal.walking .leg {
+  animation: walk 0.28s ease-in-out infinite alternate;
+}
+
+@keyframes walk {
+  from { transform: translateY(0); }
+  to { transform: translateY(-0.35vmin); }
 }
 
 .cow {
@@ -580,6 +638,15 @@ body {
 
 .cow .eye.left { left: 72%; }
 .cow .eye.right { left: 82%; }
+
+.cow .mouth {
+  left: 86%;
+  top: 42%;
+  width: 8%;
+  height: 4.5%;
+  background: #b24a3a;
+  border-radius: 0 0 50% 50%;
+}
 
 .cow .leg {
   position: absolute;
@@ -665,6 +732,15 @@ body {
 .pig .eye.left { left: 70%; }
 .pig .eye.right { left: 80%; }
 
+.pig .mouth {
+  left: 86%;
+  top: 46%;
+  width: 7%;
+  height: 4.5%;
+  background: #c44862;
+  border-radius: 0 0 50% 50%;
+}
+
 .pig .leg {
   position: absolute;
   bottom: 10%;
@@ -745,6 +821,16 @@ body {
 .sheep .eye.left { left: 70%; }
 .sheep .eye.right { left: 80%; }
 
+.sheep .mouth {
+  left: 74%;
+  top: 50%;
+  width: 10%;
+  height: 5%;
+  border: 0.22vmin solid #8a4a3a;
+  border-color: transparent transparent #8a4a3a;
+  border-radius: 0 0 50% 50%;
+}
+
 .sheep .leg {
   position: absolute;
   bottom: 8%;
@@ -816,6 +902,15 @@ body {
   clip-path: polygon(0 30%, 100% 50%, 0 80%);
 }
 
+.chicken .mouth {
+  left: 78%;
+  top: 30%;
+  width: 6%;
+  height: 4%;
+  background: #c43a28;
+  border-radius: 40%;
+}
+
 .chicken .wing {
   position: absolute;
   left: 22%;
@@ -838,7 +933,7 @@ body {
 .chicken .leg.right { left: 48%; }
 
 .duck {
-  right: 14%;
+  left: 77%;
   top: 58%;
   width: 9%;
   height: 11%;
@@ -881,6 +976,15 @@ body {
   width: 16%;
   height: 10%;
   background: #f08a2a;
+  border-radius: 40%;
+}
+
+.duck .mouth {
+  left: 86%;
+  top: 30%;
+  width: 7%;
+  height: 4%;
+  background: #c45a1a;
   border-radius: 40%;
 }
 
@@ -930,6 +1034,16 @@ body {
 
 .kitten .eye.left { left: 58%; }
 .kitten .eye.right { left: 72%; }
+
+.kitten .mouth {
+  left: 64%;
+  top: 38%;
+  width: 12%;
+  height: 6%;
+  border: 0.22vmin solid #c45a4a;
+  border-color: transparent transparent #c45a4a;
+  border-radius: 0 0 50% 50%;
+}
 
 .kitten .ear {
   position: absolute;
