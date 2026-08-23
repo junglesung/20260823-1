@@ -283,7 +283,7 @@
     } else if (game.won) {
       goalValue.textContent = "已餵飽獲勝";
     } else {
-      goalValue.textContent = "餵飽全場就贏";
+      goalValue.textContent = game.shopUnlocked ? "已有黃金鑰匙" : "黃金鑰匙 10 元";
     }
 
     shopBtn.hidden = !game.shopUnlocked;
