@@ -1108,14 +1108,14 @@ body {
   font-weight: 700;
   letter-spacing: 0.18em;
   color: #fff8ea;
-  background: linear-gradient(180deg, #c9c1b4, #9a9286);
-  box-shadow: 0 0.5vmin 0 #6f6860;
-  cursor: not-allowed;
-  opacity: 0.72;
+  background: linear-gradient(180deg, #ffb34a, #e07a1a);
+  box-shadow: 0 0.5vmin 0 #9a4e0c;
+  cursor: pointer;
+  pointer-events: auto;
 }
 
-.start-btn:disabled {
-  pointer-events: none;
+.start-btn:active {
+  transform: translateY(0.2vmin);
 }
 
 .start-hint {
@@ -1148,4 +1148,425 @@ body {
   .viewport {
     overflow: hidden;
   }
+}
+
+.stage.playing .title-wrap {
+  top: 2.2%;
+  transform: translateX(-50%) scale(0.62);
+  transform-origin: top center;
+}
+
+.stage.playing .scene > .animal,
+.stage.playing #title-actions {
+  display: none;
+}
+
+.stage.playing .people {
+  z-index: 5;
+}
+
+.stage.raining {
+  background: linear-gradient(180deg, #4d6d82 0%, #7d93a3 46%, #6a8f3e 52%, #4f7a28 100%);
+}
+
+.stage.raining .sun {
+  opacity: 0.2;
+}
+
+.stage.farm-upgraded .house-body {
+  background: linear-gradient(180deg, #fff8e0, #f3c86a);
+}
+
+.stage.farm-upgraded .house-roof {
+  background: #c43b28;
+}
+
+.stage.animals-upgraded .herd-animal {
+  filter: saturate(1.25) brightness(1.06);
+}
+
+.door-lock {
+  position: absolute;
+  left: 34%;
+  bottom: 18%;
+  z-index: 4;
+  padding: 0.15vmin 0.7vmin;
+  border-radius: 0.5vmin;
+  background: #3a2a18;
+  color: #ffe7a0;
+  font-size: 1.2vmin;
+  pointer-events: none;
+}
+
+.hud {
+  position: absolute;
+  top: 2.4%;
+  left: 1.6%;
+  z-index: 8;
+  display: flex;
+  gap: 0.8vmin;
+  pointer-events: none;
+}
+
+.hud-card {
+  min-width: 9.5vmin;
+  padding: 0.6vmin 1.1vmin;
+  border-radius: 1vmin;
+  background: rgba(255, 247, 228, 0.92);
+  box-shadow: 0 0.3vmin 0.8vmin rgba(0, 0, 0, 0.16);
+}
+
+.hud-card span {
+  display: block;
+  font-size: 1.35vmin;
+  color: #6a4a28;
+}
+
+.hud-card strong {
+  display: block;
+  font-size: 2.1vmin;
+  line-height: 1.15;
+}
+
+.hud-card.goal strong {
+  font-size: 1.7vmin;
+}
+
+.game-actions {
+  position: absolute;
+  left: 50%;
+  bottom: 5.5%;
+  transform: translateX(-50%);
+  z-index: 8;
+  display: flex;
+  gap: 1.2vmin;
+  pointer-events: auto;
+}
+
+.game-btn {
+  appearance: none;
+  border: none;
+  min-width: 14vmin;
+  padding: 1.1vmin 2.2vmin;
+  border-radius: 1.8vmin;
+  font-size: 2.4vmin;
+  font-weight: 700;
+  color: #fff8ea;
+  cursor: pointer;
+}
+
+.food-btn {
+  background: linear-gradient(180deg, #86c43a, #4d8a18);
+  box-shadow: 0 0.4vmin 0 #355f10;
+}
+
+.umbrella-btn {
+  background: linear-gradient(180deg, #5aa7e4, #2b6fad);
+  box-shadow: 0 0.4vmin 0 #1c4f7c;
+}
+
+.shop-btn {
+  background: linear-gradient(180deg, #ffb34a, #e07a1a);
+  box-shadow: 0 0.4vmin 0 #9a4e0c;
+}
+
+.game-btn:active {
+  transform: translateY(0.2vmin);
+}
+
+.rain-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.raindrop {
+  position: absolute;
+  top: -8%;
+  width: 0.18vmin;
+  height: 3.2vmin;
+  background: linear-gradient(180deg, transparent, rgba(220, 240, 255, 0.9));
+  border-radius: 1vmin;
+  animation: rainfall 0.9s linear infinite;
+}
+
+@keyframes rainfall {
+  to { transform: translateY(120vmin); }
+}
+
+.foods {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.food-drop {
+  position: absolute;
+  width: 1.8%;
+  height: 3.2%;
+  margin-left: -0.9%;
+  background: #e07a1a;
+  border-radius: 50% 50% 45% 45%;
+  box-shadow: inset -0.2vmin -0.15vmin 0 #c45a10;
+}
+
+.food-drop::after {
+  content: "";
+  position: absolute;
+  left: 28%;
+  top: -18%;
+  width: 38%;
+  height: 28%;
+  background: #5aaa2a;
+  border-radius: 40%;
+}
+
+.herd {
+  position: absolute;
+  inset: 0;
+}
+
+.herd-animal {
+  position: absolute;
+  width: 4.6%;
+  height: 7.2%;
+  z-index: 4;
+}
+
+.herd-sprite {
+  position: absolute;
+  inset: 18% 8% 0;
+}
+
+.herd-body {
+  position: absolute;
+  left: 8%;
+  top: 42%;
+  width: 62%;
+  height: 38%;
+  border-radius: 46%;
+}
+
+.herd-head {
+  position: absolute;
+  left: 56%;
+  top: 18%;
+  width: 34%;
+  height: 38%;
+  border-radius: 48%;
+}
+
+.herd-eye {
+  position: absolute;
+  top: 28%;
+  width: 8%;
+  height: 9%;
+  background: #1c140e;
+  border-radius: 50%;
+  z-index: 3;
+  box-shadow: 0.08vmin 0.08vmin 0 rgba(255, 255, 255, 0.5) inset;
+}
+
+.herd-eye.left { left: 62%; }
+.herd-eye.right { left: 74%; }
+
+.herd-mouth {
+  position: absolute;
+  left: 70%;
+  top: 42%;
+  width: 12%;
+  height: 7%;
+  border: 0.18vmin solid #b24a3a;
+  border-color: transparent transparent #b24a3a;
+  border-radius: 0 0 50% 50%;
+  z-index: 3;
+}
+
+.herd-ear {
+  position: absolute;
+  top: 10%;
+  width: 10%;
+  height: 14%;
+  border-radius: 50%;
+}
+
+.herd-ear.left { left: 56%; }
+.herd-ear.right { left: 78%; }
+
+.herd-animal.cow .herd-body,
+.herd-animal.cow .herd-head { background: #fffdf7; }
+.herd-animal.cow .herd-ear { background: #5a3a22; }
+
+.herd-animal.pig .herd-body,
+.herd-animal.pig .herd-head,
+.herd-animal.pig .herd-ear { background: #f7a7b8; }
+
+.herd-animal.sheep .herd-body { background: #fff; }
+.herd-animal.sheep .herd-head,
+.herd-animal.sheep .herd-ear { background: #f0d2a8; }
+
+.herd-animal.chicken .herd-body,
+.herd-animal.chicken .herd-head { background: #fff4d2; }
+.herd-animal.chicken .herd-ear { background: #e24a3a; }
+
+.herd-animal.duck .herd-body,
+.herd-animal.duck .herd-head { background: #ffe566; }
+.herd-animal.duck .herd-ear { background: #f08a2a; }
+
+.herd-animal.kitten .herd-body,
+.herd-animal.kitten .herd-head,
+.herd-animal.kitten .herd-ear { background: #f2b05a; }
+
+.herd-animal.facing-left .herd-sprite {
+  transform: scaleX(-1);
+}
+
+.herd-animal.hungry .herd-sprite {
+  filter: saturate(0.7) brightness(0.88);
+}
+
+.herd-animal.hungry::after {
+  content: "餓";
+  position: absolute;
+  left: 50%;
+  top: -8%;
+  transform: translateX(-50%);
+  padding: 0.05vmin 0.45vmin;
+  border-radius: 0.5vmin;
+  background: #fff3c8;
+  font-size: 1.15vmin;
+  color: #8a3a18;
+}
+
+.herd-animal.wet .herd-sprite {
+  filter: hue-rotate(160deg) saturate(0.8);
+}
+
+.herd-animal.has-rope .herd-sprite::before {
+  content: "";
+  position: absolute;
+  left: 20%;
+  top: 36%;
+  width: 48%;
+  height: 8%;
+  border: 0.18vmin solid #8a5528;
+  border-radius: 40%;
+  z-index: 4;
+}
+
+.umbrella {
+  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: 92%;
+  width: 150%;
+  height: 58%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.herd-animal.has-umbrella .umbrella {
+  display: block;
+}
+
+.umbrella-canopy {
+  height: 52%;
+  background: #e24a3a;
+  border-radius: 50% 50% 8% 8%;
+  box-shadow: 0 0.2vmin 0.3vmin rgba(0, 0, 0, 0.15);
+}
+
+.umbrella-pole {
+  width: 7%;
+  height: 38%;
+  margin: 0 auto;
+  background: #8a5a32;
+  border-radius: 0.2vmin;
+}
+
+.toast {
+  position: absolute;
+  left: 50%;
+  top: 18%;
+  transform: translateX(-50%);
+  z-index: 12;
+  margin: 0;
+  padding: 0.8vmin 1.8vmin;
+  border-radius: 1.2vmin;
+  background: rgba(58, 42, 24, 0.88);
+  color: #fff8ea;
+  font-size: 2vmin;
+  pointer-events: none;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20, 28, 16, 0.42);
+  pointer-events: auto;
+}
+
+.overlay[hidden],
+.hud[hidden],
+.game-actions[hidden],
+.rain-layer[hidden],
+.toast[hidden],
+.door-lock[hidden],
+.game-btn[hidden] {
+  display: none !important;
+}
+
+.panel {
+  width: min(72%, 92vmin);
+  padding: 2.4vmin 3vmin;
+  border-radius: 1.8vmin;
+  background: #fff7e4;
+  text-align: center;
+  box-shadow: 0 1vmin 3vmin rgba(0, 0, 0, 0.28);
+}
+
+.panel h2 {
+  margin: 0 0 1vmin;
+  font-size: 3.2vmin;
+}
+
+.panel p {
+  margin: 0 0 1.6vmin;
+  font-size: 2vmin;
+  line-height: 1.5;
+}
+
+.shop-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1vmin;
+  margin-bottom: 1.2vmin;
+}
+
+.panel-btn {
+  appearance: none;
+  border: none;
+  padding: 1vmin 1.6vmin;
+  border-radius: 1.2vmin;
+  font-size: 2vmin;
+  font-weight: 700;
+  color: #fff8ea;
+  background: linear-gradient(180deg, #ffb34a, #e07a1a);
+  cursor: pointer;
+}
+
+.panel-btn.ghost {
+  background: #8a7a66;
+}
+
+.panel-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
 }

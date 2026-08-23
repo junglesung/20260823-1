@@ -8,7 +8,7 @@
 </head>
 <body>
   <div class="viewport">
-    <div class="stage" id="stage" role="img" aria-label="開心動物農場主畫面">
+    <div class="stage" id="stage" aria-label="開心動物農場">
       <div class="sky">
         <div class="sun" aria-hidden="true"></div>
         <div class="cloud cloud-a" aria-hidden="true"></div>
@@ -50,6 +50,7 @@
             <div class="house-door"></div>
           </div>
           <div class="house-base"></div>
+          <div class="door-lock" id="door-lock" hidden>已鎖門</div>
         </div>
 
         <div class="people">
@@ -80,6 +81,8 @@
         </div>
 
         <div class="pond" aria-hidden="true"></div>
+        <div id="herd" class="herd"></div>
+        <div id="foods" class="foods"></div>
         <div class="flowers" aria-hidden="true">
           <span></span><span></span><span></span><span></span><span></span>
         </div>
@@ -177,14 +180,69 @@
         </div>
       </div>
 
-      <div class="actions">
-        <button type="button" class="start-btn" id="start-btn" disabled>
-          開始遊戲
-        </button>
-        <p class="start-hint">遊戲規則稍後公布，按鈕暫時無法使用</p>
+      <div class="rain-layer" id="rain-layer" hidden></div>
+
+      <div class="hud" id="hud" hidden>
+        <div class="hud-card">
+          <span>金錢</span>
+          <strong id="money-value">10</strong>
+        </div>
+        <div class="hud-card">
+          <span>動物</span>
+          <strong id="animal-count">100</strong>
+        </div>
+        <div class="hud-card">
+          <span>肚子餓</span>
+          <strong id="hungry-count">0</strong>
+        </div>
+        <div class="hud-card">
+          <span id="weather-label">下雨倒數</span>
+          <strong id="weather-value">60秒</strong>
+        </div>
+        <div class="hud-card goal">
+          <span>目標</span>
+          <strong>存到 100 元</strong>
+        </div>
       </div>
 
-      <p class="updated">最後更新：2026/08/23 13:47</p>
+      <div class="actions" id="title-actions">
+        <button type="button" class="start-btn" id="start-btn">
+          開始遊戲
+        </button>
+        <p class="start-hint">餵飽動物、下雨撐傘，存到 100 元就能升級牧場</p>
+      </div>
+
+      <div class="game-actions" id="game-actions" hidden>
+        <button type="button" class="game-btn food-btn" id="food-btn">食物</button>
+        <button type="button" class="game-btn umbrella-btn" id="umbrella-btn" hidden>雨傘</button>
+        <button type="button" class="game-btn shop-btn" id="shop-btn" hidden>升級牧場</button>
+      </div>
+
+      <p class="toast" id="toast" hidden></p>
+
+      <div class="overlay" id="neighbor-overlay" hidden>
+        <div class="panel">
+          <h2>只剩一隻動物了！</h2>
+          <p id="neighbor-text">趕快去隔壁把動物的繩子偷來，把牠們帶回來，然後把門鎖住。</p>
+          <button type="button" class="panel-btn" id="neighbor-btn">去隔壁</button>
+        </div>
+      </div>
+
+      <div class="overlay" id="shop-overlay" hidden>
+        <div class="panel">
+          <h2>存到 100 元了！</h2>
+          <p>可以去別的牧場工作，也可以升級農夫的地方、升級動物，還能讓動物有更多食物。</p>
+          <div class="shop-list">
+            <button type="button" class="panel-btn" id="work-btn">去別的牧場工作</button>
+            <button type="button" class="panel-btn" id="upgrade-farm-btn">升級農夫的地方</button>
+            <button type="button" class="panel-btn" id="upgrade-animal-btn">升級動物</button>
+            <button type="button" class="panel-btn" id="upgrade-food-btn">更多食物</button>
+          </div>
+          <button type="button" class="panel-btn ghost" id="shop-close-btn">先繼續照顧動物</button>
+        </div>
+      </div>
+
+      <p class="updated">最後更新：2026/08/23 14:00</p>
     </div>
   </div>
   <script src="js/main.js"></script>
